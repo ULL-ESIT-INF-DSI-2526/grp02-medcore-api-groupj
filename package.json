@@ -25,9 +25,11 @@
   "homepage": "https://github.com/ULL-ESIT-INF-DSI-2526/grp02-medcore-api-groupj#readme",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/supertest": "^7.2.0",
     "@vitest/coverage-v8": "^4.0.18",
+    "cors": "^2.8.6",
     "env-cmd": "^10.1.0",
     "eslint": "^10.0.3",
     "eslint-config-prettier": "^10.1.8",
