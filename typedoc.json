@@ -1,0 +1,9 @@
+{
+  "entryPoints": ["src/*.ts"],
+  "out": "docs",
+  "exclude": ["**/*.spec.ts", "**/test/**"],
+  "includeVersion": true,
+  "readme": "README.md",
+  "name": "MedCore API",
+  "entryPointStrategy": "expand"
+}
