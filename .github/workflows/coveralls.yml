@@ -19,7 +19,7 @@ jobs:
           node-version: 25.x
           cache: 'npm'
       - name: Start MongoDB
-        uses: supercharge/mongodb-github-actions@1.12.1
+        uses: supercharge/mongodb-github-action@1.12.1
         with:
           mongodb-version: '8.0'
       - name: Installing dependencies
