@@ -22,6 +22,8 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
     type: String,
     required: true,
     trim: true,
+    minLength: 2,
+    maxLength: 100,
     validate(value: string) {
       if (!validator.default.isAlpha(value, "es-ES", { ignore: " '-" })) {
         throw new Error("El nombre solo puede tener letras");
@@ -54,6 +56,7 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
     required: true,
     trim: true,
     immutable: true,
+    minLength: 11,
     validate(value: string) {
       if (!validator.default.isNumeric(value, { no_symbols: true })) {
         throw new Error(
@@ -73,11 +76,13 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
       type: String,
       required: true,
       trim: true,
+      minLength: 5,
     },
     phoneNumber: {
       type: String,
       required: true,
       trim: true,
+      minLength: 9,
       validate(value: string) {
         if (!validator.default.isMobilePhone(value, "es-ES")) {
           throw new Error("El numero de telefono no es valido");
@@ -99,6 +104,7 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
   allergies: {
     type: [String],
     default: [],
+    minItems: 0,
   },
   bloodType: {
     type: String,
