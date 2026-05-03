@@ -53,6 +53,7 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
     unique: true,
     required: true,
     trim: true,
+    immutable: true,
     validate(value: string) {
       if (!validator.default.isNumeric(value, { no_symbols: true })) {
         throw new Error(
