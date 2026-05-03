@@ -9,7 +9,7 @@
     "dev": "tsc-watch --onSuccess \"env-cmd -f ./config/dev.env node dist/index.js\"",
     "doc": "typedoc",
     "test": "env-cmd -f ./config/test.env vitest run",
-    "coverage": "env-cmd -f ./config/test.env vitest run --coverage --coveraeg.include **/src/*"
+    "coverage": "env-cmd -f ./config/test.env vitest run --coverage --coverage.include **/src/*"
   },
   "repository": {
     "type": "git",

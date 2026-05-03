@@ -69,12 +69,179 @@ describe("POST /pacientes", () => {
     expect(secondPacient).not.toBe(null);
     expect(secondPacient!.name).to.equal("Jose Perez");
   });
+
+  test("Pacients cant have the same ID", async () => {
+    await request(app)
+      .post("/pacientes")
+      .send({
+        name: "Ana Maria",
+        dateOfBirth: "1960-12-5",
+        IdNumber: "12345678",
+        socialSecurityNum: "12345678901",
+        gender: "mujer",
+        contact: {
+          address: "Camino San Alberto",
+          phoneNumber: "+34600123456",
+          email: "AniMari12@gmail.com",
+        },
+        allergies: ["gatos"],
+        bloodType: "AB-",
+        status: "activo",
+      })
+      .expect(500);
+  });
+
+  test("Pacients cannot have the same social security number", async () => {
+    await request(app)
+      .post("/pacientes")
+      .send({
+        name: "Ana Maria",
+        dateOfBirth: "1960-12-5",
+        IdNumber: "14235867",
+        socialSecurityNum: "28123456789",
+        gender: "mujer",
+        contact: {
+          address: "Camino San Alberto",
+          phoneNumber: "+34600123456",
+          email: "AniMari12@gmail.com",
+        },
+        allergies: ["gatos"],
+        bloodType: "AB-",
+        status: "activo",
+      })
+      .expect(500);
+  });
+
+  test("Error of invalid name", async () => {
+    await request(app)
+      .post("/pacientes")
+      .send({
+        name: "Ana Maria2",
+        dateOfBirth: "1960-12-5",
+        IdNumber: "14235867",
+        socialSecurityNum: "12345678901",
+        gender: "mujer",
+        contact: {
+          address: "Camino San Alberto",
+          phoneNumber: "+34600123456",
+          email: "AniMari12@gmail.com",
+        },
+        allergies: ["gatos"],
+        bloodType: "AB-",
+        status: "activo",
+      })
+      .expect(500);
+  });
+
+  test("Error of invalid IdNumber", async () => {
+    await request(app)
+      .post("/pacientes")
+      .send({
+        name: "Ana Maria",
+        dateOfBirth: "1960-12-5",
+        IdNumber: "1423586",
+        socialSecurityNum: "12345678901",
+        gender: "mujer",
+        contact: {
+          address: "Camino San Alberto",
+          phoneNumber: "+34600123456",
+          email: "AniMari12@gmail.com",
+        },
+        allergies: ["gatos"],
+        bloodType: "AB-",
+        status: "activo",
+      })
+      .expect(500);
+  });
+
+  test("Error of invalid socialSecurityNum", async () => {
+    await request(app)
+      .post("/pacientes")
+      .send({
+        name: "Ana Maria",
+        dateOfBirth: "1960-12-5",
+        IdNumber: "14235867",
+        socialSecurityNum: "12345678901a",
+        gender: "mujer",
+        contact: {
+          address: "Camino San Alberto",
+          phoneNumber: "+34600123456",
+          email: "AniMari12@gmail.com",
+        },
+        allergies: ["gatos"],
+        bloodType: "AB-",
+        status: "activo",
+      })
+      .expect(500);
+  });
+
+  test("Error of invalid email", async () => {
+    await request(app)
+      .post("/pacientes")
+      .send({
+        name: "Ana Maria",
+        dateOfBirth: "1960-12-5",
+        IdNumber: "14235867",
+        socialSecurityNum: "12345678901",
+        gender: "mujer",
+        contact: {
+          address: "Camino San Alberto",
+          phoneNumber: "+34600123456",
+          email: "AniMari12",
+        },
+        allergies: ["gatos"],
+        bloodType: "AB-",
+        status: "activo",
+      })
+      .expect(500);
+  });
+
+  test("Error of invalid phone number", async () => {
+    await request(app)
+      .post("/pacientes")
+      .send({
+        name: "Ana Maria2",
+        dateOfBirth: "1960-12-5",
+        IdNumber: "14235867",
+        socialSecurityNum: "12345678901",
+        gender: "mujer",
+        contact: {
+          address: "Camino San Alberto",
+          phoneNumber: "+34123456",
+          email: "AniMari12@gmail.com",
+        },
+        allergies: ["gatos"],
+        bloodType: "AB-",
+        status: "activo",
+      })
+      .expect(500);
+  });
+});
+
+describe("Error unknown page", () => {
+  test("accessing a page that does not exist", async () => {
+    await request(app).get(`/empty`).expect(501);
+  });
+});
+
+describe("GET /pacientes", () => {
+  test("Getting a pacient by their name", async () => {
+    await request(app).get(`/pacientes?name=Pedro Gonzalez`).expect(200);
+  });
+
+  test("Error when getting a pacient that does not exist", async () => {
+    await request(app).get(`/pacientes?name=Ana Maria`).expect(404);
+  });
+
+  test("Error when getting a pacient that does not exist", async () => {
+    await request(app).get("/pacientes?name=").expect(400);
+  });
 });
 
 describe("GET /pacientes/:id", () => {
   test("Should successfully retrieve a pacient by ID", async () => {
     const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
-    
+
     const response = await request(app)
       .get(`/pacientes/${paciente?._id}`)
       .expect(200);
@@ -90,9 +257,7 @@ describe("GET /pacientes/:id", () => {
 
   test("Should return 404 if pacient not found", async () => {
     const fakeId = "507f1f77bcf86cd799439011";
-    
-    await request(app)
-      .get(`/pacientes/${fakeId}`)
-      .expect(404);
+
+    await request(app).get(`/pacientes/${fakeId}`).expect(404);
   });
 });
