@@ -1,4 +1,11 @@
-import { describe, test, beforeEach, beforeAll, expect } from "vitest";
+import {
+  describe,
+  test,
+  beforeEach,
+  beforeAll,
+  expect,
+  afterAll,
+} from "vitest";
 import request from "supertest";
 import { app } from "../src/app";
 import { connectDB } from "../src/db/mongoose";
@@ -338,5 +345,36 @@ describe("PATCH /pacientes/:id", () => {
       .patch(`/pacientes/${paciente?._id}`)
       .send({ status: "baja temporal" })
       .expect(500);
+  });
+});
+
+describe("DELETE /pacientes", () => {
+  test("Delete a pacient from the system", async () => {
+    await request(app).delete("/pacientes?name=Pedro Gonzalez").expect(200);
+  });
+
+  test("Error when no name is provided", async () => {
+    await request(app).delete("/pacientes?name=").expect(400);
+  });
+
+  test("Error when a pacient is not found", async () => {
+    await request(app).delete("/pacientes?name=Ana Gonzalez").expect(404);
+  });
+});
+
+describe("DELETE /pacientes/:id", () => {
+  test("Delete a pacient by ID", async () => {
+    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+    await request(app).delete(`/pacientes/${paciente?._id}`).expect(200);
+  });
+
+  test("Error when a pacient is not found", async () => {
+    const fakeId = "507f1f77bcf86cd799439011";
+    await request(app).delete(`/pacientes/${fakeId}`).expect(404);
+  });
+
+  test("Internal server error", async () => {
+    const paciente = await Paciente.findOne({ name: "Ana Gonzalez" });
+    await request(app).delete(`/pacientes/${paciente?._id}`).expect(500);
   });
 });

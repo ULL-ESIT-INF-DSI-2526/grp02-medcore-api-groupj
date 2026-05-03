@@ -125,3 +125,39 @@ pacienteRouter.patch("/pacientes/:id", async (req, res) => {
     }
   }
 });
+
+pacienteRouter.delete("/pacientes", async (req, res) => {
+  if (!req.query.name) {
+    res.status(400).send({
+      error: "Es necesario un nombre",
+    });
+  } else {
+    Paciente.findOne({ name: req.query.name.toString() })
+      .then((paciente) => {
+        if (!paciente) {
+          res.status(404).send();
+        } else {
+          return Paciente.findByIdAndDelete(paciente._id).then((paciente) => {
+            res.send(paciente);
+          });
+        }
+      })
+      .catch((error) => {
+        res.status(500).send(error);
+      });
+  }
+});
+
+pacienteRouter.delete("/pacientes/:id", async (req, res) => {
+  Paciente.findByIdAndDelete(req.params.id)
+    .then((paciente) => {
+      if (!paciente) {
+        res.status(404).send();
+      } else {
+        res.send(paciente);
+      }
+    })
+    .catch((error) => {
+      res.status(500).send(error);
+    });
+});
