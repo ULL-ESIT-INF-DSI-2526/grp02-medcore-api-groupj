@@ -36,10 +36,10 @@ beforeEach(async () => {
   await new Paciente(primerPaciente).save();
 });
 
-describe("POST /pacientes", () => {
+describe("POST /patients", () => {
   test("Should successfully create a new pacient", async () => {
     const response = await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Jose Perez",
         dateOfBirth: "1985-12-21",
@@ -79,7 +79,7 @@ describe("POST /pacientes", () => {
 
   test("Pacients cant have the same ID", async () => {
     await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Ana Maria",
         dateOfBirth: "1960-12-5",
@@ -100,7 +100,7 @@ describe("POST /pacientes", () => {
 
   test("Pacients cannot have the same social security number", async () => {
     await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Ana Maria",
         dateOfBirth: "1960-12-5",
@@ -121,7 +121,7 @@ describe("POST /pacientes", () => {
 
   test("Error of invalid name", async () => {
     await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Ana Maria2",
         dateOfBirth: "1960-12-5",
@@ -142,7 +142,7 @@ describe("POST /pacientes", () => {
 
   test("Error of invalid IdNumber", async () => {
     await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Ana Maria",
         dateOfBirth: "1960-12-5",
@@ -163,7 +163,7 @@ describe("POST /pacientes", () => {
 
   test("Error of invalid socialSecurityNum", async () => {
     await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Ana Maria",
         dateOfBirth: "1960-12-5",
@@ -184,7 +184,7 @@ describe("POST /pacientes", () => {
 
   test("Error of invalid email", async () => {
     await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Ana Maria",
         dateOfBirth: "1960-12-5",
@@ -205,7 +205,7 @@ describe("POST /pacientes", () => {
 
   test("Error of invalid phone number", async () => {
     await request(app)
-      .post("/pacientes")
+      .post("/patients")
       .send({
         name: "Ana Maria2",
         dateOfBirth: "1960-12-5",
@@ -231,26 +231,26 @@ describe("Error unknown page", () => {
   });
 });
 
-describe("GET /pacientes", () => {
+describe("GET /patients", () => {
   test("Getting a pacient by their name", async () => {
-    await request(app).get(`/pacientes?name=Pedro Gonzalez`).expect(200);
+    await request(app).get(`/patients?name=Pedro Gonzalez`).expect(200);
   });
 
   test("Error when getting a pacient that does not exist", async () => {
-    await request(app).get(`/pacientes?name=Ana Maria`).expect(404);
+    await request(app).get(`/patients?name=Ana Maria`).expect(404);
   });
 
   test("Error when getting a pacient that does not exist", async () => {
-    await request(app).get("/pacientes?name=").expect(400);
+    await request(app).get("/patients?name=").expect(400);
   });
 });
 
-describe("GET /pacientes/:id", () => {
+describe("GET /patients/:id", () => {
   test("Should successfully retrieve a pacient by ID", async () => {
     const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
 
     const response = await request(app)
-      .get(`/pacientes/${paciente?._id}`)
+      .get(`/patients/${paciente?._id}`)
       .expect(200);
 
     expect(response.body).to.include({
@@ -265,50 +265,50 @@ describe("GET /pacientes/:id", () => {
   test("Should return 404 if pacient not found", async () => {
     const fakeId = "507f1f77bcf86cd799439011";
 
-    await request(app).get(`/pacientes/${fakeId}`).expect(404);
+    await request(app).get(`/patients/${fakeId}`).expect(404);
   });
 });
 
-describe("PATCH /pacientes", () => {
+describe("PATCH /patients", () => {
   test("Correct modification of a pacient", async () => {
     await request(app)
-      .patch(`/pacientes?IdNumber=12345678`)
+      .patch(`/patients?IdNumber=12345678`)
       .send({ status: "baja temporal" })
       .expect(200);
   });
 
   test("Error when no ID is given", async () => {
-    await request(app).patch(`/pacientes?IdNumber=`).expect(400);
+    await request(app).patch(`/patients?IdNumber=`).expect(400);
   });
 
   test("Error when no modification is provided", async () => {
     await request(app)
-      .patch(`/pacientes?IdNumber=12345678`)
+      .patch(`/patients?IdNumber=12345678`)
       .send({})
       .expect(400);
   });
 
   test("Error when trying to modify a immutable variable", async () => {
     await request(app)
-      .patch(`/pacientes?IdNumber=12345678`)
+      .patch(`/patients?IdNumber=12345678`)
       .send({ bloodType: "A+" })
       .expect(400);
   });
 
   test("Error when trying to modify a pacient that does not exist", async () => {
     await request(app)
-      .patch(`/pacientes?IdNumber=12345677`)
+      .patch(`/patients?IdNumber=12345677`)
       .send({ status: "baja temporal" })
       .expect(404);
   });
 });
 
-describe("PATCH /pacientes/:id", () => {
+describe("PATCH /patients/:id", () => {
   test("Correct modification of pacient through ID", async () => {
     const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
 
     await request(app)
-      .patch(`/pacientes/${paciente?._id}`)
+      .patch(`/patients/${paciente?._id}`)
       .send({ status: "baja temporal" })
       .expect(200);
   });
@@ -317,7 +317,7 @@ describe("PATCH /pacientes/:id", () => {
     const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
 
     await request(app)
-      .patch(`/pacientes/${paciente?._id}`)
+      .patch(`/patients/${paciente?._id}`)
       .send({})
       .expect(400);
   });
@@ -326,7 +326,7 @@ describe("PATCH /pacientes/:id", () => {
     const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
 
     await request(app)
-      .patch(`/pacientes/${paciente?._id}`)
+      .patch(`/patients/${paciente?._id}`)
       .send({ bloodType: "A+" })
       .expect(400);
   });
@@ -334,7 +334,7 @@ describe("PATCH /pacientes/:id", () => {
   test("Error when trying to modify a pacient that does not exist", async () => {
     const fakeId = "507f1f77bcf86cd799439011";
     await request(app)
-      .patch(`/pacientes/${fakeId}`)
+      .patch(`/patients/${fakeId}`)
       .send({ status: "baja temporal" })
       .expect(404);
   });
@@ -342,39 +342,39 @@ describe("PATCH /pacientes/:id", () => {
   test("Internal server error", async () => {
     const paciente = await Paciente.findOne({ name: "Jose Angel" });
     await request(app)
-      .patch(`/pacientes/${paciente?._id}`)
+      .patch(`/patients/${paciente?._id}`)
       .send({ status: "baja temporal" })
       .expect(500);
   });
 });
 
-describe("DELETE /pacientes", () => {
+describe("DELETE /patients", () => {
   test("Delete a pacient from the system", async () => {
-    await request(app).delete("/pacientes?name=Pedro Gonzalez").expect(200);
+    await request(app).delete("/patients?name=Pedro Gonzalez").expect(200);
   });
 
   test("Error when no name is provided", async () => {
-    await request(app).delete("/pacientes?name=").expect(400);
+    await request(app).delete("/patients?name=").expect(400);
   });
 
   test("Error when a pacient is not found", async () => {
-    await request(app).delete("/pacientes?name=Ana Gonzalez").expect(404);
+    await request(app).delete("/patients?name=Ana Gonzalez").expect(404);
   });
 });
 
-describe("DELETE /pacientes/:id", () => {
+describe("DELETE /patients/:id", () => {
   test("Delete a pacient by ID", async () => {
     const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
-    await request(app).delete(`/pacientes/${paciente?._id}`).expect(200);
+    await request(app).delete(`/patients/${paciente?._id}`).expect(200);
   });
 
   test("Error when a pacient is not found", async () => {
     const fakeId = "507f1f77bcf86cd799439011";
-    await request(app).delete(`/pacientes/${fakeId}`).expect(404);
+    await request(app).delete(`/patients/${fakeId}`).expect(404);
   });
 
   test("Internal server error", async () => {
     const paciente = await Paciente.findOne({ name: "Ana Gonzalez" });
-    await request(app).delete(`/pacientes/${paciente?._id}`).expect(500);
+    await request(app).delete(`/patients/${paciente?._id}`).expect(500);
   });
 });
