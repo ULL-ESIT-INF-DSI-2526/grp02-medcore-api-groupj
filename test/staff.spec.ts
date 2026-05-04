@@ -131,11 +131,20 @@ describe("POST /staff", () => {
     vi.spyOn(Staff.prototype, "save").mockImplementationOnce(() => {
       throw new Error("Random error");
     });
-
     await request(app)
       .post("/staff")
       .send(validStaff)
       .expect(500);
   });
+
+test("Unknown non-error should return 500", async () => {
+  vi.spyOn(Staff.prototype, "save").mockImplementationOnce(() => {
+    throw "random string error";
+  });
+  await request(app)
+    .post("/staff")
+    .send(validStaff)
+    .expect(500);
+});
 
 });
