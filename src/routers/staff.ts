@@ -11,11 +11,13 @@ staffRouter.post("/staff", async (req, res) => {
     res.status(201).send(member);
   } 
   catch (error: unknown) {
-    if (error instanceof Error && error.name === "ValidationError") { 
-      return res.status(400).send({error: error.message});
-    }
-    else if (error instanceof MongoServerError && error.code === 11000) { 
-      return res.status(409).send({error: "El número de colegiado ya existe"});
+    if (error instanceof Error) {
+      if (error.message.includes("duplicate key")) { 
+        return res.status(409).send({error: "El número de colegiado ya existe"});
+      }
+      else { 
+        return res.status(400).send(error.message);
+      }
     }
     return res.status(500).send({error: "Error interno del servidor"});
   }
