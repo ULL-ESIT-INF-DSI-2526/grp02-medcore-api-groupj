@@ -1,6 +1,6 @@
 import express from "express";
+import mongoose from "mongoose";
 import { Staff } from "../models/staff.js";
-import { MongoServerError } from "mongodb";
 import { MEDICAL_SPECIALTIES } from "../types/staff/specialty.js";
 
 export const staffRouter = express.Router();
@@ -56,5 +56,22 @@ staffRouter.get("/staff", async (req, res) => {
   }
   catch {
     res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+staffRouter.get("/staff/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({error: "ID inválido"});
+    }
+    const staff = await Staff.findById(id);
+    if (!staff) { 
+      return res.status(404).send({ error: "No se encontró el miembro del personal"});
+    }
+    res.send(staff);
+  } 
+  catch {
+    res.status(500).send({error: "Error interno del servidor"});
   }
 });
