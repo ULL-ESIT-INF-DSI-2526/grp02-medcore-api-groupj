@@ -15,7 +15,7 @@ staffRouter.post("/staff", async (req, res) => {
       if (error.message.includes("duplicate key")) { 
         return res.status(409).send({error: "El número de colegiado ya existe"});
       }
-      else { 
+      if (error.name === "ValidationError") {
         return res.status(400).send(error.message);
       }
     }
