@@ -1,7 +1,7 @@
 {
   "name": "medcore",
   "version": "1.0.0",
-  "description": "",
+  "description": "[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/JMUAIOxt)",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ULL-ESIT-INF-DSI-2526/grp02-medcore-api-groupj"
+    "url": "git+https://github.com/ULL-ESIT-INF-DSI-2526/grp02-medcore-api-groupj.git"
   },
   "keywords": [],
   "author": "",
@@ -51,7 +51,6 @@
     "validator": "^13.15.0"
   },
   "directories": {
-    "doc": "docs",
     "test": "test"
   }
 }

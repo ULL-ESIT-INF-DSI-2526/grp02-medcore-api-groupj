@@ -1,0 +1,30 @@
+export const MEDICAL_SPECIALTIES = [
+  "medicina_general",
+  "medicina_interna",
+  "cardiologia",
+  "dermatologia",
+  "endocrinologia",
+  "gastroenterologia",
+  "hematologia",
+  "nefrologia",
+  "neumologia",
+  "neurologia",
+  "oncologia",
+  "pediatria",
+  "psiquiatria",
+  "reumatologia",
+  "traumatologia",
+  "urologia",
+  "ginecologia",
+  "oftalmologia",
+  "otorrinolaringologia",
+  "radiologia",
+  "anestesiologia",
+  "urgencias",
+  "medicina_familiar",
+  "geriatria",
+  "cirugia_general",
+  "medicina_intensiva"
+] as const;
+
+export type MedicalSpecialty = typeof MEDICAL_SPECIALTIES[number];
