@@ -1,6 +1,7 @@
 import express from "express";
 import { Staff } from "../models/staff.js";
 import { MongoServerError } from "mongodb";
+import { MEDICAL_SPECIALTIES } from "../types/staff/specialty.js";
 
 export const staffRouter = express.Router();
 
@@ -23,16 +24,37 @@ staffRouter.post("/staff", async (req, res) => {
   }
 });
 
-
-
-/*
-staffRouter.post("/staff", async (req, res) => {
-  const member = new Staff(req.body);
+staffRouter.get("/staff", async (req, res) => {
   try {
-    await member.save();
-    res.status(201).send(member);
-  } catch (error) {
-    res.status(500).send(error);
+    const nameRaw = req.query.name;
+    const specRaw = req.query.medicalSpecialty;
+    // se verifica que se han pasado strings
+    if (nameRaw !== undefined && typeof nameRaw !== "string") {
+      return res.status(400).send({error: "Nombre inválido" });
+    }
+    if (specRaw !== undefined && typeof specRaw !== "string") {
+      return res.status(400).send({error: "Especialidad inválida" });
+    }
+    const name = nameRaw;
+    const medicalSpecialty = specRaw;
+    // se verifica que no este vacio lo que se ha pasado
+    if (name === "" || medicalSpecialty === "") {
+      return res.status(400).send({error: "Los filtros no pueden estar vacios"});
+    }
+    // si se ha pasado alguna especiallidad se verifica que sea válida
+    if (medicalSpecialty && !MEDICAL_SPECIALTIES.includes(medicalSpecialty as any)) {
+      return res.status(400).send({error: "Especialidad no válida" });
+    }
+    const filter: any = {};
+    if (name) filter.name = name;
+    if (medicalSpecialty) filter.medicalSpecialty = medicalSpecialty;
+    const result = await Staff.find(filter);
+    if (result.length === 0) {
+      return res.status(404).send({error: "No se encontraron resultados"});
+    }
+    res.send(result);
+  }
+  catch {
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
-*/
