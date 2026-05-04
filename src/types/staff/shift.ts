@@ -1,5 +1,5 @@
 export const SHIFTS = [
-  "manana",
+  "mañana",
   "tarde",
   "noche",
   "rotatorio"

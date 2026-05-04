@@ -60,7 +60,6 @@ const staffSchema = new Schema<StaffDocument>({
   shift: {
     type: String,
     enum: SHIFTS,
-    lowercase: true,
     required: true
   },
   roomNumber: {
