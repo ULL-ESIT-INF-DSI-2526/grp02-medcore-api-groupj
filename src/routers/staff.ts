@@ -27,23 +27,19 @@ staffRouter.post("/staff", async (req, res) => {
 staffRouter.get("/staff", async (req, res) => {
   try {
     const nameRaw = req.query.name;
-    const specRaw = req.query.medicalSpecialty;
-    // se verifica que se han pasado strings
-    if (nameRaw !== undefined && typeof nameRaw !== "string") {
-      return res.status(400).send({error: "Nombre inválido" });
-    }
-    if (specRaw !== undefined && typeof specRaw !== "string") {
-      return res.status(400).send({error: "Especialidad inválida" });
-    }
-    const name = nameRaw;
-    const medicalSpecialty = specRaw;
-    // se verifica que no este vacio lo que se ha pasado
-    if (name === "" || medicalSpecialty === "") {
-      return res.status(400).send({error: "Los filtros no pueden estar vacios"});
-    }
+    const medicalSpecialty = req.query.medicalSpecialty;
     // si se ha pasado alguna especiallidad se verifica que sea válida
     if (medicalSpecialty && !MEDICAL_SPECIALTIES.includes(medicalSpecialty as any)) {
       return res.status(400).send({error: "Especialidad no válida" });
+    }
+    // se verifica que se han pasado un string por nombre
+    if (nameRaw !== undefined && typeof nameRaw !== "string") {
+      return res.status(400).send({error: "Nombre inválido" });
+    }
+    const name = nameRaw;
+    // se verifica que no este vacio lo que se ha pasado
+    if (name === "" || medicalSpecialty === "") {
+      return res.status(400).send({error: "Los filtros no pueden estar vacios"});
     }
     const filter: any = {};
     if (name) filter.name = name;
