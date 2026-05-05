@@ -3,17 +3,25 @@ import { Paciente } from "../models/paciente.js";
 
 export const pacienteRouter = express.Router();
 
-pacienteRouter.post("/pacientes", async (req, res) => {
+pacienteRouter.post("/patients", async (req, res) => {
   const paciente = new Paciente(req.body);
   try {
     await paciente.save();
     res.status(201).send(paciente);
   } catch (error) {
-    res.status(500).send(error);
+    if (error instanceof Error) {
+      if (error.message.includes("duplicate key")) {
+        res.status(409).send({ error: "El numero de colegiado ya existe" });
+      }
+      if (error.name === "ValidationError") {
+        res.status(400).send(error.message);
+      }
+    }
+    res.status(500).send({ error: "Error interno del servidor" });
   }
 });
 
-pacienteRouter.get("/pacientes", async (req, res) => {
+pacienteRouter.get("/patients", async (req, res) => {
   if (req.query.name !== undefined && !req.query.name.toString().trim()) {
     return res.status(400).send({
       error: "El parámetro name no puede estar vacío",
@@ -34,7 +42,7 @@ pacienteRouter.get("/pacientes", async (req, res) => {
     });
 });
 
-pacienteRouter.get("/pacientes/:id", async (req, res) => {
+pacienteRouter.get("/patients/:id", async (req, res) => {
   Paciente.findById(req.params.id)
     .then((paciente) => {
       if (paciente) {
@@ -48,35 +56,45 @@ pacienteRouter.get("/pacientes/:id", async (req, res) => {
     });
 });
 
-pacienteRouter.patch("/pacientes", async (req, res) => {
-  if (!req.query.IdNumber) {
+pacienteRouter.patch("/patients", async (req, res) => {
+  if (!req.query.IdNumber && !req.query.name) {
     res.status(400).send({
-      error: "Se necesita un numero de identificacion",
+      error: "Se necesita un numero de identificacion o nombre",
     });
   } else if (!req.body || Object.keys(req.body).length === 0) {
     res.status(400).send({
       error: "Se necesitan tener los campos a modificar en la peticion",
     });
   } else {
-    const actualizacionesPermitidas = ["nombre", "contact", "status"];
+    const actualizacionesPermitidas = [
+      "nombre",
+      "contact",
+      "status",
+      "bloodType",
+      "allergies",
+      "gender",
+      "IdNumber",
+      "socialSecurityNumber",
+      "dateOfBirth",
+    ];
     const actualizacionesAHacer = Object.keys(req.body);
     const esValida = actualizacionesAHacer.every((update) =>
       actualizacionesPermitidas.includes(update),
     );
 
     if (!esValida) {
-      res.status(400).send({
+      res.status(409).send({
         error: "Actualizacion no fue permitida",
       });
     } else {
-      Paciente.findOneAndUpdate(
-        { IdNumber: req.query.IdNumber.toString() },
-        req.body,
-        {
-          returnDocument: "after",
-          runValidators: true,
-        },
-      )
+      const filter = req.query.IdNumber
+        ? { IdNumber: req.query.IdNumber.toString() }
+        : { name: req.query.name!.toString() };
+
+      Paciente.findOneAndUpdate(filter, req.body, {
+        returnDocument: "after",
+        runValidators: true,
+      })
         .then((paciente) => {
           if (!paciente) {
             res.status(404).send();
@@ -91,20 +109,30 @@ pacienteRouter.patch("/pacientes", async (req, res) => {
   }
 });
 
-pacienteRouter.patch("/pacientes/:id", async (req, res) => {
+pacienteRouter.patch("/patients/:id", async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     res.status(400).send({
       error: "Se necesitan tener los campos a modificar en la peticion",
     });
   } else {
-    const actualizacionesPermitidas = ["nombre", "contact", "status"];
+    const actualizacionesPermitidas = [
+      "nombre",
+      "contact",
+      "status",
+      "bloodType",
+      "allergies",
+      "gender",
+      "IdNumber",
+      "socialSecurityNumber",
+      "dateOfBirth",
+    ];
     const actualizacionesAHacer = Object.keys(req.body);
     const esValida = actualizacionesAHacer.every((update) =>
       actualizacionesPermitidas.includes(update),
     );
 
     if (!esValida) {
-      res.status(400).send({
+      res.status(409).send({
         error: "Actualizacion no fue permitida",
       });
     } else {
@@ -126,7 +154,7 @@ pacienteRouter.patch("/pacientes/:id", async (req, res) => {
   }
 });
 
-pacienteRouter.delete("/pacientes", async (req, res) => {
+pacienteRouter.delete("/patients", async (req, res) => {
   if (!req.query.name) {
     res.status(400).send({
       error: "Es necesario un nombre",
@@ -148,7 +176,7 @@ pacienteRouter.delete("/pacientes", async (req, res) => {
   }
 });
 
-pacienteRouter.delete("/pacientes/:id", async (req, res) => {
+pacienteRouter.delete("/patients/:id", async (req, res) => {
   Paciente.findByIdAndDelete(req.params.id)
     .then((paciente) => {
       if (!paciente) {
