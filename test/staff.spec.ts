@@ -1,4 +1,5 @@
 import { describe, test, beforeEach, beforeAll, expect, afterAll, vi } from "vitest";
+import mongoose from "mongoose";
 import request from "supertest";
 import { app } from "../src/app";
 import { connectDB } from "../src/db/mongoose";
@@ -38,16 +39,13 @@ describe("POST /staff", () => {
       .post("/staff")
       .send(validStaff)
       .expect(201);
-
     expect(response.body.name).toBe("Juan Perez");
-
     const staff = await Staff.findById(response.body._id);
     expect(staff).not.toBeNull();
   });
 
   test("Should not allow duplicate medicalLicenseNum", async () => {
     await new Staff(validStaff).save();
-
     await request(app)
       .post("/staff")
       .send(validStaff)
@@ -146,5 +144,103 @@ test("Unknown non-error should return 500", async () => {
     .send(validStaff)
     .expect(500);
 });
+
+});
+
+describe("GET /staff", () => {
+
+  test("Should return all staff (no filters)", async () => {
+    await new Staff(validStaff).save();
+    const res = await request(app)
+      .get("/staff")
+      .expect(200);
+    expect(res.body.length).toBe(1);
+  });
+
+  test("Should filter by name", async () => {
+    await new Staff(validStaff).save();
+    const res = await request(app)
+      .get("/staff?name=Juan Perez")
+      .expect(200);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].name).toBe("Juan Perez");
+  });
+
+  test("Should filter by specialty", async () => {
+    await new Staff(validStaff).save();
+    const res = await request(app)
+      .get("/staff?medicalSpecialty=cardiologia")
+      .expect(200);
+    expect(res.body.length).toBe(1);
+  });
+
+  test("Should return 404 if no results", async () => {
+    await new Staff(validStaff).save();
+    await request(app)
+      .get("/staff?name=NoExiste")
+      .expect(404);
+  });
+
+  test("Should return 400 for invalid specialty", async () => {
+    await request(app)
+      .get("/staff?medicalSpecialty=pizza")
+      .expect(400);
+  });
+
+  test("Should return 400 for empty filter", async () => {
+    await request(app)
+      .get("/staff?name=")
+      .expect(400);
+  });
+
+  test("Should return 400 if name is not a string", async () => {
+    await request(app)
+      .get("/staff?name=Juan Perez&name=Juan Perez")
+      .expect(400);
+  });
+
+  test("Should return 500 on internal error (GET /staff)", async () => {
+    vi.spyOn(Staff, "find").mockImplementationOnce(() => {
+      throw new Error("DB error");
+    });
+    await request(app)
+      .get("/staff")
+      .expect(500);
+  });
+
+});
+
+describe("GET /staff/:id", () => {
+
+  test("Should return a staff by id", async () => {
+    const saved = await new Staff(validStaff).save();
+    const res = await request(app)
+      .get(`/staff/${saved._id}`)
+      .expect(200);
+    expect(res.body.name).toBe("Juan Perez");
+  });
+
+  test("Should return 404 if staff not found", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    await request(app)
+      .get(`/staff/${fakeId}`)
+      .expect(404);
+  });
+
+  test("Should return 400 if id is invalid", async () => {
+    await request(app)
+      .get("/staff/123")
+      .expect(400);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    vi.spyOn(Staff, "findById").mockImplementationOnce(() => {
+      throw new Error("DB error");
+    });
+    const id = new mongoose.Types.ObjectId();
+    await request(app)
+      .get(`/staff/${id}`)
+      .expect(500);
+  });
 
 });
