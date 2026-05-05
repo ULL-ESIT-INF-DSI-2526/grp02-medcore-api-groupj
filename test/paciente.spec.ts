@@ -4,6 +4,7 @@ import {
   beforeEach,
   beforeAll,
   expect,
+  vi,
   afterAll,
 } from "vitest";
 import request from "supertest";
@@ -32,8 +33,13 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  vi.clearAllMocks();
   await Paciente.deleteMany();
   await new Paciente(primerPaciente).save();
+});
+
+afterAll(async () => {
+  await Paciente.deleteMany();
 });
 
 describe("POST /patients", () => {
@@ -232,6 +238,27 @@ describe("Error unknown page", () => {
 });
 
 describe("GET /patients", () => {
+  test("Getting all patients", async () => {
+    const response = await request(app).get(`/patients/`).expect(200);
+
+    expect(response.body).to.be.an("array");
+    expect(response.body[0]).to.deep.include({
+      name: "Pedro Gonzalez",
+      dateOfBirth: "1999-11-20T00:00:00.000Z",
+      IdNumber: "12345678",
+      socialSecurityNum: "28123456789",
+      gender: "hombre",
+      contact: {
+        address: "Calle los Dragos",
+        phoneNumber: "+34612345678",
+        email: "pedrogo@gmail.com",
+      },
+      allergies: [],
+      bloodType: "O+",
+      status: "activo",
+    });
+  });
+
   test("Getting a pacient by their name", async () => {
     await request(app).get(`/patients?name=Pedro Gonzalez`).expect(200);
   });
@@ -242,6 +269,11 @@ describe("GET /patients", () => {
 
   test("Error when getting a pacient that does not exist", async () => {
     await request(app).get("/patients?name=").expect(400);
+  });
+
+  test("Internal error", async () => {
+    vi.spyOn(Paciente, "find").mockRejectedValueOnce(new Error("Random error"));
+    await request(app).get("/patients").expect(500);
   });
 });
 
@@ -266,6 +298,12 @@ describe("GET /patients/:id", () => {
     const fakeId = "507f1f77bcf86cd799439011";
 
     await request(app).get(`/patients/${fakeId}`).expect(404);
+  });
+
+  test("Internal error", async () => {
+    vi.spyOn(Paciente, "findById").mockRejectedValueOnce(new Error("Random error"));
+    const fakeId = "507f1f77bcf86cd799439011";
+    await request(app).get(`/patients/${fakeId}`).expect(500);
   });
 });
 
@@ -301,6 +339,14 @@ describe("PATCH /patients", () => {
       .send({ status: "baja temporal" })
       .expect(404);
   });
+  
+  test("Internal error", async () => {
+    vi.spyOn(Paciente, "findOneAndUpdate").mockRejectedValueOnce(new Error("Random error"));
+    await request(app)
+      .patch(`/patients?IdNumber=12345678`)
+      .send({ status: "baja temporal" })
+      .expect(500);
+  });
 });
 
 describe("PATCH /patients/:id", () => {
@@ -316,10 +362,7 @@ describe("PATCH /patients/:id", () => {
   test("Error when no modification is provided", async () => {
     const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
 
-    await request(app)
-      .patch(`/patients/${paciente?._id}`)
-      .send({})
-      .expect(400);
+    await request(app).patch(`/patients/${paciente?._id}`).send({}).expect(400);
   });
 
   test("Error when trying to modify a immutable variable", async () => {
@@ -359,6 +402,11 @@ describe("DELETE /patients", () => {
 
   test("Error when a pacient is not found", async () => {
     await request(app).delete("/patients?name=Ana Gonzalez").expect(404);
+  });
+
+  test("internal server error", async () => {
+    vi.spyOn(Paciente, "findOneAndDelete").mockRejectedValueOnce(new Error("Random Error"));
+    await request(app).delete("/patients?name=Pedro Gonzalez").expect(500);
   });
 });
 
