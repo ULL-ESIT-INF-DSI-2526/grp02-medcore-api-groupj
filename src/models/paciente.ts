@@ -33,14 +33,12 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
   dateOfBirth: {
     type: Date,
     required: true,
-    immutable: true,
   },
   IdNumber: {
     type: String,
     unique: true,
     required: true,
     trim: true,
-    immutable: true,
     validate(value: string) {
       if (
         !validator.default.isIdentityCard(value, "ES") &&
@@ -55,7 +53,6 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
     unique: true,
     required: true,
     trim: true,
-    immutable: true,
     minLength: 11,
     validate(value: string) {
       if (!validator.default.isNumeric(value, { no_symbols: true })) {
@@ -110,7 +107,6 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
     type: String,
     required: true,
     enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
-    immutable: true,
   },
   status: {
     type: String,

@@ -301,7 +301,9 @@ describe("GET /patients/:id", () => {
   });
 
   test("Internal error", async () => {
-    vi.spyOn(Paciente, "findById").mockRejectedValueOnce(new Error("Random error"));
+    vi.spyOn(Paciente, "findById").mockRejectedValueOnce(
+      new Error("Random error"),
+    );
     const fakeId = "507f1f77bcf86cd799439011";
     await request(app).get(`/patients/${fakeId}`).expect(500);
   });
@@ -312,6 +314,13 @@ describe("PATCH /patients", () => {
     await request(app)
       .patch(`/patients?IdNumber=12345678`)
       .send({ status: "baja temporal" })
+      .expect(200);
+  });
+
+  test("Correct modification of a pacient", async () => {
+    await request(app)
+      .patch(`/patients?name=Pedro Gonzalez`)
+      .send({ status: "fallecido" })
       .expect(200);
   });
 
@@ -326,10 +335,10 @@ describe("PATCH /patients", () => {
       .expect(400);
   });
 
-  test("Error when trying to modify a immutable variable", async () => {
+  test("Error when trying to modify an invalid variable", async () => {
     await request(app)
       .patch(`/patients?IdNumber=12345678`)
-      .send({ bloodType: "A+" })
+      .send({ diet: "Fish" })
       .expect(400);
   });
 
@@ -339,9 +348,11 @@ describe("PATCH /patients", () => {
       .send({ status: "baja temporal" })
       .expect(404);
   });
-  
+
   test("Internal error", async () => {
-    vi.spyOn(Paciente, "findOneAndUpdate").mockRejectedValueOnce(new Error("Random error"));
+    vi.spyOn(Paciente, "findOneAndUpdate").mockRejectedValueOnce(
+      new Error("Random error"),
+    );
     await request(app)
       .patch(`/patients?IdNumber=12345678`)
       .send({ status: "baja temporal" })
@@ -405,7 +416,9 @@ describe("DELETE /patients", () => {
   });
 
   test("internal server error", async () => {
-    vi.spyOn(Paciente, "findOneAndDelete").mockRejectedValueOnce(new Error("Random Error"));
+    vi.spyOn(Paciente, "findOneAndDelete").mockRejectedValueOnce(
+      new Error("Random Error"),
+    );
     await request(app).delete("/patients?name=Pedro Gonzalez").expect(500);
   });
 });
