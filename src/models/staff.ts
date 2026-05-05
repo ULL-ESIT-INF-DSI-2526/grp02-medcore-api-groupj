@@ -37,7 +37,6 @@ const staffSchema = new Schema<StaffDocument>({
     type: String,
     required: true,
     unique: true,
-    immutable: true,
     trim: true,
     validate(value: string) {
       if (!/^\d{9}$/.test(value)) {
