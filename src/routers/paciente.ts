@@ -9,7 +9,15 @@ pacienteRouter.post("/patients", async (req, res) => {
     await paciente.save();
     res.status(201).send(paciente);
   } catch (error) {
-    res.status(500).send(error);
+    if (error instanceof Error) {
+      if (error.message.includes("duplicate key")) {
+        res.status(409).send({ error: "El numero de colegiado ya existe" });
+      }
+      if (error.name === "ValidationError") {
+        res.status(400).send(error.message);
+      }
+    }
+    res.status(500).send({ error: "Error interno del servidor" });
   }
 });
 
@@ -75,7 +83,7 @@ pacienteRouter.patch("/patients", async (req, res) => {
     );
 
     if (!esValida) {
-      res.status(400).send({
+      res.status(409).send({
         error: "Actualizacion no fue permitida",
       });
     } else {
@@ -107,14 +115,24 @@ pacienteRouter.patch("/patients/:id", async (req, res) => {
       error: "Se necesitan tener los campos a modificar en la peticion",
     });
   } else {
-    const actualizacionesPermitidas = ["nombre", "contact", "status"];
+    const actualizacionesPermitidas = [
+      "nombre",
+      "contact",
+      "status",
+      "bloodType",
+      "allergies",
+      "gender",
+      "IdNumber",
+      "socialSecurityNumber",
+      "dateOfBirth",
+    ];
     const actualizacionesAHacer = Object.keys(req.body);
     const esValida = actualizacionesAHacer.every((update) =>
       actualizacionesPermitidas.includes(update),
     );
 
     if (!esValida) {
-      res.status(400).send({
+      res.status(409).send({
         error: "Actualizacion no fue permitida",
       });
     } else {

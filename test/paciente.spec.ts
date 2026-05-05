@@ -101,7 +101,7 @@ describe("POST /patients", () => {
         bloodType: "AB-",
         status: "activo",
       })
-      .expect(500);
+      .expect(409);
   });
 
   test("Pacients cannot have the same social security number", async () => {
@@ -122,7 +122,7 @@ describe("POST /patients", () => {
         bloodType: "AB-",
         status: "activo",
       })
-      .expect(500);
+      .expect(409);
   });
 
   test("Error of invalid name", async () => {
@@ -143,7 +143,7 @@ describe("POST /patients", () => {
         bloodType: "AB-",
         status: "activo",
       })
-      .expect(500);
+      .expect(400);
   });
 
   test("Error of invalid IdNumber", async () => {
@@ -164,7 +164,7 @@ describe("POST /patients", () => {
         bloodType: "AB-",
         status: "activo",
       })
-      .expect(500);
+      .expect(400);
   });
 
   test("Error of invalid socialSecurityNum", async () => {
@@ -185,7 +185,7 @@ describe("POST /patients", () => {
         bloodType: "AB-",
         status: "activo",
       })
-      .expect(500);
+      .expect(400);
   });
 
   test("Error of invalid email", async () => {
@@ -206,7 +206,7 @@ describe("POST /patients", () => {
         bloodType: "AB-",
         status: "activo",
       })
-      .expect(500);
+      .expect(400);
   });
 
   test("Error of invalid phone number", async () => {
@@ -227,7 +227,7 @@ describe("POST /patients", () => {
         bloodType: "AB-",
         status: "activo",
       })
-      .expect(500);
+      .expect(400);
   });
 });
 
@@ -339,7 +339,7 @@ describe("PATCH /patients", () => {
     await request(app)
       .patch(`/patients?IdNumber=12345678`)
       .send({ diet: "Fish" })
-      .expect(400);
+      .expect(409);
   });
 
   test("Error when trying to modify a pacient that does not exist", async () => {
@@ -382,7 +382,25 @@ describe("PATCH /patients/:id", () => {
     await request(app)
       .patch(`/patients/${paciente?._id}`)
       .send({ bloodType: "A+" })
-      .expect(400);
+      .expect(200);
+  });
+
+  test("Error when trying to modify a immutable variable", async () => {
+    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+
+    await request(app)
+      .patch(`/patients/${paciente?._id}`)
+      .send({ bloodType: "C+" })
+      .expect(500);
+  });
+
+  test("Error when trying to modify a immutable variable", async () => {
+    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+
+    await request(app)
+      .patch(`/patients/${paciente?._id}`)
+      .send({ diet: "Fish" })
+      .expect(409);
   });
 
   test("Error when trying to modify a pacient that does not exist", async () => {
