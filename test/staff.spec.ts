@@ -244,3 +244,174 @@ describe("GET /staff/:id", () => {
   });
 
 });
+
+describe("PATCH /staff", () => {
+
+  test("Should update a staff member by medicalLicenseNum", async () => {
+    const staff = await new Staff(validStaff).save();
+    const response = await request(app)
+      .patch(`/staff?medicalLicenseNum=${staff.medicalLicenseNum}`)
+      .send({ shift: "tarde" })
+      .expect(200);
+    expect(response.body.shift).toBe("tarde");
+  });
+
+  test("Should return 400 if medicalLicenseNum is missing", async () => {
+    await request(app)
+      .patch("/staff")
+      .send({ shift: "tarde" })
+      .expect(400);
+  });
+
+  test("Should return 400 if medicalLicenseNum is empty", async () => {
+    await request(app)
+      .patch("/staff?medicalLicenseNum=")
+      .send({ shift: "tarde" })
+      .expect(400);
+  });
+
+  test("Should return 400 if medicalLicenseNum is not a string (array case)", async () => {
+    await request(app)
+      .patch("/staff?medicalLicenseNum[]=123&medicalLicenseNum[]=456")
+      .send({ shift: "tarde" })
+      .expect(400);
+  });
+
+  test("Should return 400 if body is empty", async () => {
+    const staff = await new Staff(validStaff).save();
+
+    await request(app)
+      .patch(`/staff?medicalLicenseNum=${staff.medicalLicenseNum}`)
+      .send({})
+      .expect(400);
+  });
+
+  test("Should return 404 if staff not found", async () => {
+    await request(app)
+      .patch("/staff?medicalLicenseNum=000000000")
+      .send({ shift: "tarde" })
+      .expect(404);
+  });
+
+  test("Should return 400 on validation error", async () => {
+    const staff = await new Staff(validStaff).save();
+    await request(app)
+      .patch(`/staff?medicalLicenseNum=${staff.medicalLicenseNum}`)
+      .send({ experience: -10 })
+      .expect(400);
+  });
+
+  test("Should return 409 on duplicate medicalLicenseNum", async () => {
+    const staff1 = await new Staff(validStaff).save();
+    const staff2 = await new Staff({
+      ...validStaff,
+      medicalLicenseNum: "999999999"
+    }).save();
+    await request(app)
+      .patch(`/staff?medicalLicenseNum=${staff1.medicalLicenseNum}`)
+      .send({ medicalLicenseNum: "999999999" })
+      .expect(409);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    const staff = await new Staff(validStaff).save();
+    vi.spyOn(Staff, "findOneAndUpdate").mockImplementationOnce(() => {
+      throw new Error("Random error");
+    });
+    await request(app)
+      .patch(`/staff?medicalLicenseNum=${staff.medicalLicenseNum}`)
+      .send({ shift: "tarde" })
+      .expect(500);
+  });
+
+  test("Should return 500 if non-error is thrown", async () => {
+    const staff = await new Staff(validStaff).save();
+    vi.spyOn(Staff, "findOneAndUpdate").mockImplementationOnce(() => {
+      throw "random string";
+    });
+    await request(app)
+      .patch(`/staff?medicalLicenseNum=${staff.medicalLicenseNum}`)
+      .send({ shift: "tarde" })
+      .expect(500);
+  });
+
+});
+
+describe("PATCH /staff/:id", () => {
+
+  test("Should update a staff member by ID", async () => {
+    const staff = await new Staff(validStaff).save();
+    const response = await request(app)
+      .patch(`/staff/${staff._id}`)
+      .send({ shift: "tarde" })
+      .expect(200);
+    expect(response.body.shift).toBe("tarde");
+  });
+
+  test("Should return 400 if ID is invalid", async () => {
+    await request(app)
+      .patch("/staff/invalidID")
+      .send({ shift: "tarde" })
+      .expect(400);
+  });
+
+  test("Should return 400 if body is empty", async () => {
+    const staff = await new Staff(validStaff).save();
+    await request(app)
+      .patch(`/staff/${staff._id}`)
+      .send({})
+      .expect(400);
+  });
+
+  test("Should return 404 if staff not found", async () => {
+    const fakeId = "507f1f77bcf86cd799439011";
+    await request(app)
+      .patch(`/staff/${fakeId}`)
+      .send({ shift: "tarde" })
+      .expect(404);
+  });
+
+  test("Should return 400 on validation error", async () => {
+    const staff = await new Staff(validStaff).save();
+    await request(app)
+      .patch(`/staff/${staff._id}`)
+      .send({ experience: -5 })
+      .expect(400);
+  });
+
+  test("Should return 409 on duplicate medicalLicenseNum", async () => {
+    const staff1 = await new Staff(validStaff).save();
+    const staff2 = await new Staff({
+      ...validStaff,
+      medicalLicenseNum: "999999999"
+    }).save();
+
+    await request(app)
+      .patch(`/staff/${staff1._id}`)
+      .send({ medicalLicenseNum: "999999999" })
+      .expect(409);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    const staff = await new Staff(validStaff).save();
+    vi.spyOn(Staff, "findOneAndUpdate").mockRejectedValueOnce(
+      new Error("Random error")
+    );
+    await request(app)
+      .patch(`/staff/${staff._id}`)
+      .send({ shift: "tarde" })
+      .expect(500);
+  });
+
+  test("Should return 500 if non-error is thrown", async () => {
+    const staff = await new Staff(validStaff).save();
+    vi.spyOn(Staff, "findOneAndUpdate").mockRejectedValueOnce(
+      "random string"
+    );
+    await request(app)
+      .patch(`/staff/${staff._id}`)
+      .send({ shift: "tarde" })
+      .expect(500);
+  });
+
+});
