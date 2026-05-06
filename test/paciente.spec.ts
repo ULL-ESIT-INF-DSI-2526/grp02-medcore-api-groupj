@@ -40,7 +40,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await Paciente.deleteMany();
-});
+})
 
 describe("POST /patients", () => {
   test("Should successfully create a new pacient", async () => {
@@ -260,7 +260,22 @@ describe("GET /patients", () => {
   });
 
   test("Getting a pacient by their name", async () => {
-    await request(app).get(`/patients?name=Pedro Gonzalez`).expect(200);
+    const response = await request(app)
+      .get(`/patients?name=Pedro Gonzalez`)
+      .expect(200);
+
+    expect(response.body).to.be.an("array");
+    expect(response.body[0]).to.deep.include({
+      name: "Pedro Gonzalez",
+      IdNumber: "12345678",
+      gender: "hombre",
+      bloodType: "O+",
+      status: "activo",
+    });
+    expect(response.body[0]).to.have.property("age");
+    expect(response.body[0].age).to.be.a("number");
+    expect(response.body[0].age).to.be.greaterThan(0);
+    expect(response.body[0].age).toBe(26);
   });
 
   test("Error when getting a pacient that does not exist", async () => {
@@ -292,6 +307,10 @@ describe("GET /patients/:id", () => {
       bloodType: "O+",
       status: "activo",
     });
+    expect(response.body).to.have.property("age");
+    expect(response.body.age).to.be.a("number");
+    expect(response.body.age).to.be.greaterThan(0);
+    expect(response.body.age).toBe(26);
   });
 
   test("Should return 404 if pacient not found", async () => {
@@ -322,6 +341,19 @@ describe("PATCH /patients", () => {
       .patch(`/patients?name=Pedro Gonzalez`)
       .send({ status: "fallecido" })
       .expect(200);
+
+    const response = await request(app).get(`/patients?name=Pedro Gonzalez`);
+    expect(response.body[0]).to.deep.include({
+      name: "Pedro Gonzalez",
+      IdNumber: "12345678",
+      gender: "hombre",
+      bloodType: "O+",
+      status: "fallecido",
+    });
+    expect(response.body[0]).to.have.property("age");
+    expect(response.body[0].age).to.be.a("number");
+    expect(response.body[0].age).to.be.greaterThan(0);
+    expect(response.body[0].age).toBe(26);
   });
 
   test("Error when no ID is given", async () => {

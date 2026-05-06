@@ -115,6 +115,23 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
   },
 });
 
+pacienteSchema.virtual("age").get(function (this: pacienteDocumentInterface) {
+  const today = new Date();
+  const birth = new Date(this.dateOfBirth);
+
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+
+  return age;
+});
+
+pacienteSchema.set("toJSON", { virtuals: true });
+pacienteSchema.set("toObject", { virtuals: true });
+
 export const Paciente = model<pacienteDocumentInterface>(
   "Paciente",
   pacienteSchema,
