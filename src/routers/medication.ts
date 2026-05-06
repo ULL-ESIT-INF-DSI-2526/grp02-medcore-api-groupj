@@ -20,3 +20,34 @@ medicationRouter.post("/medications", async (req, res) => {
     res.status(500).send({ error: "Error interno del servidor" });
   }
 });
+
+medicationRouter.get("/medications", async (req, res) => {
+  try {
+    const name = req.query.name;
+    const activo = req.query.nombreActivo;
+    const codigo = req.query.codigoNacional;
+
+    if (name !== undefined && typeof name !== "string") {
+      return res.status(400).send({ error: "Nombre invalido" });
+    }
+
+    if (activo !== undefined && typeof activo !== "string") {
+      return res.status(400).send({ error: "Nombre de activo invalido" });
+    }
+
+    if (codigo !== undefined && typeof codigo !== "string") {
+      return res.status(400).send({ error: "Codigo nacional invalido" });
+    }
+    const filter: any = {};
+    if (name) filter.name = name;
+    if (activo) filter.nombreActivo = activo;
+    if (codigo) filter.codigoNacional = codigo;
+    const result = await Medication.find(filter);
+    if (result.length === 0) {
+      return res.status(404).send({ error: "No se encontraron resultados" });
+    }
+    res.send(result);
+  } catch {
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});

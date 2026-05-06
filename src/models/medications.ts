@@ -50,9 +50,9 @@ const medicationSchema = new Schema<medicationDocument>({
     unique: true,
     minLength: 2,
     validate(value: string) {
-      if (!/^\d{9}$/.test(value)) {
+      if (!/^\d{6}$/.test(value)) {
         throw new Error(
-          "El número de colegiado debe tener exactamente 9 dígitos (XXYYZZZZZ)",
+          "El codigo nacional debe tener exactamente 6 dígitos (XXYYZZ)",
         );
       }
     },

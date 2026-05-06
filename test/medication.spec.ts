@@ -15,7 +15,7 @@ import { Medication } from "../src/models/medications";
 const validMedication = {
   name: "clemamina",
   nombreActivo: "arecolina",
-  codigoNacional: "123456789",
+  codigoNacional: "123456",
   formaFarmaceutica: "capsula",
   dosis: "50mg",
   viaAdministracion: "oral",
