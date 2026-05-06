@@ -206,3 +206,88 @@ describe("GET /medications/:id", () => {
     await request(app).get(`/medications/${id}`).expect(500);
   });
 });
+
+describe("PATCH /medications", () => {
+  test("Should update a medication by national code", async () => {
+    const medication = await new Medication(validMedication).save();
+    const response = await request(app)
+      .patch(`/medications?codigoNacional=${medication.codigoNacional}`)
+      .send({ stockDisponible: 3 })
+      .expect(200);
+    expect(response.body.stockDisponible).toBe(3);
+  });
+
+  test("Should return 400 if national code is missing", async () => {
+    await request(app)
+      .patch("/medications")
+      .send({ stockDisponible: 3 })
+      .expect(400);
+  });
+
+  test("Should return 400 if national code is empty", async () => {
+    await request(app)
+      .patch("/medications?codigoNacional=")
+      .send({ stockDisponible: 3 })
+      .expect(400);
+  });
+
+  test("Should return 400 if body is empty", async () => {
+    const medicamento = await new Medication(validMedication).save();
+
+    await request(app)
+      .patch(`/medications?codigoNacional=${medicamento.codigoNacional}`)
+      .send({})
+      .expect(400);
+  });
+
+  test("Should return 404 if medication not found", async () => {
+    await request(app)
+      .patch(`/medications?codigoNacional=000000`)
+      .send({ stockDisponible: 3 })
+      .expect(404);
+  });
+
+  test("Should return 400 on validation error", async () => {
+    const medicamento = await new Medication(validMedication).save();
+
+    await request(app)
+      .patch(`/medications?codigoNacional=${medicamento.codigoNacional}`)
+      .send({ precio: -2 })
+      .expect(400);
+  });
+
+  test("Should return 409 on duplicate codigoNacional", async () => {
+    const medicamento1 = await new Medication(validMedication).save();
+    const medicamento2 = await new Medication({
+      ...validMedication,
+      codigoNacional: "111111",
+    }).save();
+
+    await request(app)
+      .patch(`/medications?codigoNacional=${medicamento1.codigoNacional}`)
+      .send({ codigoNacional: "111111" })
+      .expect(409);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    const medications = await new Medication(validMedication).save();
+    vi.spyOn(Medication, "findOneAndUpdate").mockImplementationOnce(() => {
+      throw new Error("Random error");
+    });
+    await request(app)
+      .patch(`/medications?codigoNacional=${medications.codigoNacional}`)
+      .send({ stockDisponible: 3 })
+      .expect(500);
+  });
+
+  test("Should return 500 if non-error is thrown", async () => {
+    const medications = await new Medication(validMedication).save();
+    vi.spyOn(Medication, "findOneAndUpdate").mockImplementationOnce(() => {
+      throw "random string";
+    });
+    await request(app)
+      .patch(`/medications?codigoNacional=${medications.codigoNacional}`)
+      .send({ stockDisponible: 3 })
+      .expect(500);
+  });
+});

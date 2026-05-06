@@ -40,7 +40,9 @@ medicationRouter.get("/medications", async (req, res) => {
       return res.status(400).send({ error: "Codigo nacional invalido" });
     }
     if (name === "" || activo === "" || codigo === "") {
-      return res.status(400).send({error: "Los filtros no pueden estar vacios"});
+      return res
+        .status(400)
+        .send({ error: "Los filtros no pueden estar vacios" });
     }
     const filter: any = {};
     if (name) filter.name = name;
@@ -71,5 +73,40 @@ medicationRouter.get("/medications/:id", async (req, res) => {
     res.send(medicamento);
   } catch {
     res.status(500).send({ error: "Error interno del servidor" });
+  }
+});
+
+medicationRouter.patch("/medications", async (req, res) => {
+  try {
+    const cn = req.query.codigoNacional;
+    if (typeof cn !== "string" || cn.trim() === "") {
+      return res
+        .status(400)
+        .send({ error: "Se necesita el codigo nacional valido" });
+    }
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res
+        .status(400)
+        .send({ error: "Se requieren campos para modificar" });
+    }
+    const updated = await Medication.findOneAndUpdate(
+      { codigoNacional: cn },
+      req.body,
+      { returnDocument: "after", runValidators: true },
+    );
+    if (!updated) {
+      return res.status(404).send({ error: "No encontrado" });
+    }
+    res.send(updated);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes("duplicate key")) {
+        return res.status(409).send({ error: "El codigo nacional ya existe" });
+      }
+      if (error.name === "ValidationError") {
+        return res.status(400).send(error.message);
+      }
+    }
+    return res.status(500).send({ error: "Error interno del servidor" });
   }
 });
