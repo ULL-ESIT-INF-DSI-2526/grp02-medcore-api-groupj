@@ -7,6 +7,7 @@ import {
   vi,
   afterAll,
 } from "vitest";
+import mongoose from "mongoose";
 import request from "supertest";
 import { app } from "../src/app";
 import { connectDB } from "../src/db/mongoose";
@@ -159,30 +160,49 @@ describe("GET /medications", () => {
   });
 
   test("Should return 404 if no results", async () => {
-      await new Medication(validMedication).save();
-      await request(app)
-        .get("/medications?name=NoExiste")
-        .expect(404);
+    await new Medication(validMedication).save();
+    await request(app).get("/medications?name=NoExiste").expect(404);
+  });
+
+  test("Should return 400 for empty filter", async () => {
+    await request(app).get("/medications?name=").expect(400);
+  });
+
+  test("Should return 400 if name is not a string", async () => {
+    await request(app)
+      .get("/medications?name=Juan Perez&name=Juan Perez")
+      .expect(400);
+  });
+
+  test("Should return 500 on internal error (GET /medications)", async () => {
+    vi.spyOn(Medication, "find").mockImplementationOnce(() => {
+      throw new Error("DB error");
     });
-  
-    test("Should return 400 for empty filter", async () => {
-      await request(app)
-        .get("/medications?name=")
-        .expect(400);
+    await request(app).get("/medications").expect(500);
+  });
+});
+
+describe("GET /medications/:id", () => {
+  test("Should return a medication by id", async () => {
+    const saved = await new Medication(validMedication).save();
+    const res = await request(app).get(`/medications/${saved._id}`).expect(200);
+    expect(res.body.name).toBe("clemamina");
+  });
+
+  test("Should return 404 if medication not found", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    await request(app).get(`/medications/${fakeId}`).expect(404);
+  });
+
+  test("Should return 400 if id is invalid", async () => {
+    await request(app).get(`/medications/123`).expect(400);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    vi.spyOn(Medication, "findById").mockImplementationOnce(() => {
+      throw new Error("DB error");
     });
-  
-    test("Should return 400 if name is not a string", async () => {
-      await request(app)
-        .get("/medications?name=Juan Perez&name=Juan Perez")
-        .expect(400);
-    });
-  
-    test("Should return 500 on internal error (GET /medications)", async () => {
-      vi.spyOn(Medication, "find").mockImplementationOnce(() => {
-        throw new Error("DB error");
-      });
-      await request(app)
-        .get("/medications")
-        .expect(500);
-    });
+    const id = new mongoose.Types.ObjectId();
+    await request(app).get(`/medications/${id}`).expect(500);
+  });
 });

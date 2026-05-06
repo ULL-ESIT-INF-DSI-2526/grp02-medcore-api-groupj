@@ -55,3 +55,21 @@ medicationRouter.get("/medications", async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
+
+medicationRouter.get("/medications/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ error: "ID invalido" });
+    }
+    const medicamento = await Medication.findById(id);
+    if (!medicamento) {
+      return res
+        .status(404)
+        .send({ error: "No se encontro el miembro del personal" });
+    }
+    res.send(medicamento);
+  } catch {
+    res.status(500).send({ error: "Error interno del servidor" });
+  }
+});
