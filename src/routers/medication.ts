@@ -1,5 +1,6 @@
 import express from "express";
 import { Medication } from "../models/medications.js";
+import mongoose from "mongoose";
 
 export const medicationRouter = express.Router();
 
@@ -37,6 +38,9 @@ medicationRouter.get("/medications", async (req, res) => {
 
     if (codigo !== undefined && typeof codigo !== "string") {
       return res.status(400).send({ error: "Codigo nacional invalido" });
+    }
+    if (name === "" || activo === "" || codigo === "") {
+      return res.status(400).send({error: "Los filtros no pueden estar vacios"});
     }
     const filter: any = {};
     if (name) filter.name = name;
