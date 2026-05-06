@@ -110,3 +110,35 @@ medicationRouter.patch("/medications", async (req, res) => {
     return res.status(500).send({ error: "Error interno del servidor" });
   }
 });
+
+medicationRouter.patch("/medications/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ error: "ID invalido" });
+    }
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res
+        .status(400)
+        .send({ error: "Se requieren campos para modificar" });
+    }
+    const updated = await Medication.findOneAndUpdate({ _id: id }, req.body, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    if (!updated) {
+      return res.status(404).send({ error: "No encontrado" });
+    }
+    res.send(updated);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes("duplicate key")) {
+        return res.status(409).send({ error: "El codigo nacional ya existe" });
+      }
+      if (error.name === "ValidationError") {
+        return res.status(400).send(error.message);
+      }
+    }
+    return res.status(500).send({ error: "Error interno del servidor" });
+  }
+});

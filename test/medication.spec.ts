@@ -55,6 +55,20 @@ describe("POST /medications", () => {
     await request(app).post("/medications").send(validMedication).expect(409);
   });
 
+  test("Invalid name", async () => {
+    await request(app)
+      .post("/medications")
+      .send({ ...validMedication, name: "AB12" })
+      .expect(400);
+  });
+
+  test("Invalid nombreActivo", async () => {
+    await request(app)
+      .post("/medications")
+      .send({ ...validMedication, nombreActivo: "CD34" })
+      .expect(400);
+  });
+
   test("Invalid codigoNacional", async () => {
     await request(app)
       .post("/medications")
@@ -83,6 +97,13 @@ describe("POST /medications", () => {
       .expect(400);
   });
 
+  test("Invalid stockDisponible", async () => {
+    await request(app)
+      .post("/medications")
+      .send({ ...validMedication, stockDisponible: 1.2 })
+      .expect(400);
+  });
+
   test("Invalid dosis", async () => {
     await request(app)
       .post("/medications")
@@ -93,7 +114,14 @@ describe("POST /medications", () => {
   test("Invalid precio", async () => {
     await request(app)
       .post("/medications")
-      .send({ ...validMedication, precio: "-1" })
+      .send({ ...validMedication, precio: -1 })
+      .expect(400);
+  });
+
+  test("Invalid precio", async () => {
+    await request(app)
+      .post("/medications")
+      .send({ ...validMedication, precio: 2.3 })
       .expect(400);
   });
 
@@ -166,6 +194,14 @@ describe("GET /medications", () => {
 
   test("Should return 400 for empty filter", async () => {
     await request(app).get("/medications?name=").expect(400);
+  });
+
+  test("Should return 400 for empty filter", async () => {
+    await request(app).get("/medications?nombreActivo=").expect(400);
+  });
+
+  test("Should return 400 for empty filter", async () => {
+    await request(app).get("/medications?codigoNacional=").expect(400);
   });
 
   test("Should return 400 if name is not a string", async () => {
@@ -287,6 +323,83 @@ describe("PATCH /medications", () => {
     });
     await request(app)
       .patch(`/medications?codigoNacional=${medications.codigoNacional}`)
+      .send({ stockDisponible: 3 })
+      .expect(500);
+  });
+});
+
+describe("PATCH /medications/:id", () => {
+  test("Should update a medication by ID", async () => {
+    const medication = await new Medication(validMedication).save();
+    const response = await request(app)
+      .patch(`/medications/${medication._id}`)
+      .send({ stockDisponible: 3 })
+      .expect(200);
+    expect(response.body.stockDisponible).toBe(3);
+  });
+
+  test("Should return 400 if ID is invalid", async () => {
+    await request(app)
+      .patch("/medications/invalidID")
+      .send({ shift: "tarde" })
+      .expect(400);
+  });
+
+  test("Should return 400 if body is empty", async () => {
+    const medication = await new Medication(validMedication).save();
+    await request(app)
+      .patch(`/medications/${medication._id}`)
+      .send({})
+      .expect(400);
+  });
+
+  test("Should return 404 if medication not found", async () => {
+    const fakeId = "507f1f77bcf86cd799439011";
+    await request(app)
+      .patch(`/medications/${fakeId}`)
+      .send({ stockDisponible: 3 })
+      .expect(404);
+  });
+
+  test("Should return 400 on validation error", async () => {
+    const medication = await new Medication(validMedication).save();
+    await request(app)
+      .patch(`/medications/${medication._id}`)
+      .send({ precio: -5 })
+      .expect(400);
+  });
+
+  test("Should return 409 on duplicate codigoNacional", async () => {
+    const staff1 = await new Medication(validMedication).save();
+    const staff2 = await new Medication({
+      ...validMedication,
+      codigoNacional: "112233",
+    }).save();
+
+    await request(app)
+      .patch(`/medications/${staff1._id}`)
+      .send({ codigoNacional: "112233" })
+      .expect(409);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    const medication = await new Medication(validMedication).save();
+    vi.spyOn(Medication, "findOneAndUpdate").mockRejectedValueOnce(
+      new Error("Random error"),
+    );
+    await request(app)
+      .patch(`/medications/${medication._id}`)
+      .send({ stockDisponible: 3 })
+      .expect(500);
+  });
+
+  test("Should return 500 if non-error is thrown", async () => {
+    const medication = await new Medication(validMedication).save();
+    vi.spyOn(Medication, "findOneAndUpdate").mockRejectedValueOnce(
+      "random string",
+    );
+    await request(app)
+      .patch(`/medications/${medication._id}`)
       .send({ stockDisponible: 3 })
       .expect(500);
   });
