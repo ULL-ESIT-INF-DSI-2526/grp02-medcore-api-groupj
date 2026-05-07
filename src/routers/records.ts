@@ -1,7 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import { validateMainData } from "../utils/records/validate/validateMainData.js";
-import { getMedicationID } from "../utils/records/id/getMedicationID.js";
+import { processMedications } from "../utils/records/id/processMedications.js";
 import { getPatientID } from "../utils/records/id/getPatientID.js";
 import { getStaffID } from "../utils/records/id/getStaffID.js";
 
@@ -14,9 +14,9 @@ recordRouter.post("/record", async (req, res) => {
     validateMainData(idDocument, medicalLicense, medicationList);
     const patient = await getPatientID(idDocument);
     const responsibleStaff = await getStaffID(medicalLicense);
-    const idMedicationList = await getMedicationID(medicationList);
+    const prescribedMedications = await processMedications(medicationList);
   }
   catch {
-    
+
   }
 })

@@ -6,10 +6,9 @@ export function validateArray (medicationList: unknown, errors: string[]): void 
       return (
         typeof medication === "object" &&
         medication !== null &&
-        typeof medication.nacionalCode === "string" &&
-        medication.nacionalCode.trim().length > 0 &&
+        typeof medication.nationalCode === "string" &&
+        medication.nationalCode.trim().length > 0 &&
         typeof medication.units === "number" &&
-        Number.isInteger(medication.units) &&
         typeof medication.posology === "string" &&
         medication.posology.trim().length > 0
       );
