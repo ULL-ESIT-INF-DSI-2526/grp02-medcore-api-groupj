@@ -17,6 +17,6 @@ recordRouter.post("/record", async (req, res) => {
     const idMedicationList = await getMedicationID(medicationList);
   }
   catch {
-
+    
   }
 })

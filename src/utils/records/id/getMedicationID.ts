@@ -15,7 +15,8 @@ export async function getMedicationID(medicationList: MedicationInput[]) {
     else {
       const medID: MedicationOutput = {
         ID: med._id,
-        amount: item.amount
+        amount: item.amount,
+        posology: item.posology
       } 
       idMedicationList.push(medID);
     }
@@ -23,16 +24,11 @@ export async function getMedicationID(medicationList: MedicationInput[]) {
 }
 
 function mergeMedications(medicationList: MedicationInput[]): MedicationInput[] {
-  const medicationMap = new Map<string, number>();
+  const medicationMap = new Map<string, MedicationInput>();
   for (const medication of medicationList) {
     const current = medicationMap.get(medication.nacionalCode) || 0;
-    medicationMap.set(medication.nacionalCode, current + medication.amount);
+    if (current) current.amount += medication.amount;
+    else medicationMap.set(medication.nacionalCode, {...medication});
   }
-  return Array.from(
-    medicationMap,
-    ([nacionalCode, amount]) => ({
-      nacionalCode,
-      amount
-    })
-  );
+  return Array.from(medicationMap.values());
 }
