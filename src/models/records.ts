@@ -7,7 +7,7 @@ import { RecordStatus, RECORD_STATUS } from "../types/consultas/recordStatus.js"
 
 export interface recordDocument extends Document {
   patient: Types.ObjectId;
-  doctor: Types.ObjectId;
+  responsibleStaff: Types.ObjectId;
   recordType: RecordType;
   admissionDateTime: Date;
   dischargeDateTime?: Date;
@@ -24,7 +24,7 @@ const recordSchema = new Schema<recordDocument>({
     ref: "Paciente",
     required: true
   },
-  doctor: {
+  responsibleStaff: {
     type: Schema.Types.ObjectId,
     ref: "Staff",
     required: true
