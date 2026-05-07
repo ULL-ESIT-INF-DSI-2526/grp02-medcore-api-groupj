@@ -1,5 +1,5 @@
 export type MedicationInput = {
   nacionalCode: string;
-  amount: number;
+  units: number;
   posology: string
 }
