@@ -1,5 +1,6 @@
 import express from "express";
 import { Medication } from "../models/medications.js";
+import mongoose from "mongoose";
 
 export const medicationRouter = express.Router();
 
@@ -38,6 +39,11 @@ medicationRouter.get("/medications", async (req, res) => {
     if (codigo !== undefined && typeof codigo !== "string") {
       return res.status(400).send({ error: "Codigo nacional invalido" });
     }
+    if (name === "" || activo === "" || codigo === "") {
+      return res
+        .status(400)
+        .send({ error: "Los filtros no pueden estar vacios" });
+    }
     const filter: any = {};
     if (name) filter.name = name;
     if (activo) filter.nombreActivo = activo;
@@ -49,5 +55,90 @@ medicationRouter.get("/medications", async (req, res) => {
     res.send(result);
   } catch {
     res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+medicationRouter.get("/medications/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ error: "ID invalido" });
+    }
+    const medicamento = await Medication.findById(id);
+    if (!medicamento) {
+      return res
+        .status(404)
+        .send({ error: "No se encontro el miembro del personal" });
+    }
+    res.send(medicamento);
+  } catch {
+    res.status(500).send({ error: "Error interno del servidor" });
+  }
+});
+
+medicationRouter.patch("/medications", async (req, res) => {
+  try {
+    const cn = req.query.codigoNacional;
+    if (typeof cn !== "string" || cn.trim() === "") {
+      return res
+        .status(400)
+        .send({ error: "Se necesita el codigo nacional valido" });
+    }
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res
+        .status(400)
+        .send({ error: "Se requieren campos para modificar" });
+    }
+    const updated = await Medication.findOneAndUpdate(
+      { codigoNacional: cn },
+      req.body,
+      { returnDocument: "after", runValidators: true },
+    );
+    if (!updated) {
+      return res.status(404).send({ error: "No encontrado" });
+    }
+    res.send(updated);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes("duplicate key")) {
+        return res.status(409).send({ error: "El codigo nacional ya existe" });
+      }
+      if (error.name === "ValidationError") {
+        return res.status(400).send(error.message);
+      }
+    }
+    return res.status(500).send({ error: "Error interno del servidor" });
+  }
+});
+
+medicationRouter.patch("/medications/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ error: "ID invalido" });
+    }
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res
+        .status(400)
+        .send({ error: "Se requieren campos para modificar" });
+    }
+    const updated = await Medication.findOneAndUpdate({ _id: id }, req.body, {
+      returnDocument: "after",
+      runValidators: true,
+    });
+    if (!updated) {
+      return res.status(404).send({ error: "No encontrado" });
+    }
+    res.send(updated);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.message.includes("duplicate key")) {
+        return res.status(409).send({ error: "El codigo nacional ya existe" });
+      }
+      if (error.name === "ValidationError") {
+        return res.status(400).send(error.message);
+      }
+    }
+    return res.status(500).send({ error: "Error interno del servidor" });
   }
 });
