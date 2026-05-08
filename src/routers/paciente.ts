@@ -22,13 +22,23 @@ pacienteRouter.post("/patients", async (req, res) => {
 });
 
 pacienteRouter.get("/patients", async (req, res) => {
-  if (req.query.name !== undefined && !req.query.name.toString().trim()) {
+  const name = req.query.name;
+  const IdNumber = req.query.IdNumber;
+  if (name !== undefined && !name.toString().trim()) {
     return res.status(400).send({
       error: "El parámetro name no puede estar vacío",
     });
   }
 
-  const filter = req.query.name ? { name: req.query.name.toString() } : {};
+  if (IdNumber !== undefined && !IdNumber.toString().trim()) {
+    return res.status(400).send({
+      error: "El parametro IdNumber no puede estar vacio",
+    });
+  }
+
+  const filter: any = {};
+  if (name) filter.name = name;
+  if (IdNumber) filter.IdNumber = IdNumber;
   Paciente.find(filter)
     .then((pacientes) => {
       if (pacientes.length !== 0) {
