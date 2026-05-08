@@ -40,7 +40,7 @@ beforeEach(async () => {
 
 afterAll(async () => {
   await Paciente.deleteMany();
-})
+});
 
 describe("POST /patients", () => {
   test("Should successfully create a new pacient", async () => {
@@ -262,6 +262,25 @@ describe("GET /patients", () => {
   test("Getting a pacient by their name", async () => {
     const response = await request(app)
       .get(`/patients?name=Pedro Gonzalez`)
+      .expect(200);
+
+    expect(response.body).to.be.an("array");
+    expect(response.body[0]).to.deep.include({
+      name: "Pedro Gonzalez",
+      IdNumber: "12345678",
+      gender: "hombre",
+      bloodType: "O+",
+      status: "activo",
+    });
+    expect(response.body[0]).to.have.property("age");
+    expect(response.body[0].age).to.be.a("number");
+    expect(response.body[0].age).to.be.greaterThan(0);
+    expect(response.body[0].age).toBe(26);
+  });
+
+  test("Getting a pacient by their IdNumber", async () => {
+    const response = await request(app)
+      .get(`/patients?IdNumber=12345678`)
       .expect(200);
 
     expect(response.body).to.be.an("array");
