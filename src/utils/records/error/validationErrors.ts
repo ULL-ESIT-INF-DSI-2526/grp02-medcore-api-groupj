@@ -1,9 +1,9 @@
-export class ValidationErrors extends Error {
+import { AppError } from "./appError.js";
+
+export class ValidationErrors extends AppError {
   errors: string[];
-  statusCode: number;
   constructor(errors: string[]) {
-    super("Validation failed");
+    super("Validation failed", 400);
     this.errors = errors;
-    this.statusCode = 400;
   }
 }
