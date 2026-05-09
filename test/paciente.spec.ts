@@ -404,6 +404,13 @@ describe("PATCH /patients", () => {
       .expect(404);
   });
 
+  test("Error when trying to modify a pacient that does not exist", async () => {
+    await request(app)
+      .patch(`/patients`)
+      .send({ status: "baja temporal" })
+      .expect(400);
+  });
+
   test("Internal error", async () => {
     vi.spyOn(Paciente, "findOneAndUpdate").mockRejectedValueOnce(
       new Error("Random error"),
