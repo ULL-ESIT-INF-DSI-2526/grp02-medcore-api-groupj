@@ -60,9 +60,25 @@ const validStaff = {
   status: "activo",
 };
 
+const validRecord = {
+  idDocument: primerPaciente.IdNumber,
+  medicalLicense: validStaff.medicalLicenseNum,
+  recordType: "ingreso_hospitalario",
+  admissionDateTime: new Date(),
+  reason: "strong headaches",
+  diagnosis: "migraine",
+  medicationList: [
+    {
+      nationalCode: validMedication.codigoNacional,
+      units: 2,
+      posology: "50 mg",
+    },
+  ],
+};
+
 beforeAll(async () => {
   await connectDB();
-  await new Promise(resolve => setTimeout(resolve, 600))
+  await new Promise((resolve) => setTimeout(resolve, 600)); // delay para que los otros tests ocurran primero
 });
 
 beforeEach(async () => {
@@ -78,21 +94,6 @@ describe("POST", () => {
     const pacient = await new Paciente(primerPaciente).save();
     const staff = await new Staff(validStaff).save();
     const medication = await new Medication(validMedication).save();
-    const validRecord = {
-      idDocument: pacient.IdNumber,
-      medicalLicense: staff.medicalLicenseNum,
-      recordType: "ingreso_hospitalario",
-      admissionDateTime: new Date(),
-      reason: "strong headaches",
-      diagnosis: "migraine",
-      medicationList: [
-        {
-          nationalCode: medication.codigoNacional,
-          units: 2,
-          posology: "50 mg",
-        },
-      ],
-    };
     const response = await request(app).post("/records").send(validRecord);
     expect(response.status).toBe(201);
     expect(response.body).toHaveProperty("_id");
@@ -106,30 +107,12 @@ describe("GET", () => {
     const pacient = await new Paciente(primerPaciente).save();
     const staff = await new Staff(validStaff).save();
     const medication = await new Medication(validMedication).save();
-    const validRecord = {
-      idDocument: pacient.IdNumber,
-      medicalLicense: staff.medicalLicenseNum,
-      recordType: "ingreso_hospitalario",
-      admissionDateTime: new Date(),
-      reason: "strong headaches",
-      diagnosis: "migraine",
-      medicationList: [
-        {
-          nationalCode: medication.codigoNacional,
-          units: 2,
-          posology: "50 mg",
-        },
-      ],
-    };
-
-    // Crear el record primero
     await request(app).post("/records").send(validRecord);
 
-    // Luego hacer el GET
     const response = await request(app)
       .get(`/records/patient?idNumber=${pacient.IdNumber}`)
       .expect(200);
-    
+
     expect(response.body).toHaveLength(1);
     expect(response.body[0].reason).toBe("strong headaches");
   });
