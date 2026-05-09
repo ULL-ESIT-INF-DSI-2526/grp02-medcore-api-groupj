@@ -305,6 +305,10 @@ describe("GET /patients", () => {
     await request(app).get("/patients?name=").expect(400);
   });
 
+  test("Error when getting a pacient that does not exist", async () => {
+    await request(app).get("/patients?IdNumber=").expect(400);
+  });
+
   test("Internal error", async () => {
     vi.spyOn(Paciente, "find").mockRejectedValueOnce(new Error("Random error"));
     await request(app).get("/patients").expect(500);
