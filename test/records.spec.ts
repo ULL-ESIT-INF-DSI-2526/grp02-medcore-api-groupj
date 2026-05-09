@@ -78,7 +78,7 @@ const validRecord = {
 
 beforeAll(async () => {
   await connectDB();
-  await new Promise((resolve) => setTimeout(resolve, 600)); // delay para que los otros tests ocurran primero
+  await new Promise((resolve) => setTimeout(resolve, 650)); // delay para que los otros tests ocurran primero
 });
 
 beforeEach(async () => {

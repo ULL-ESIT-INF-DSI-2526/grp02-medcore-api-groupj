@@ -1,5 +1,8 @@
 import express from "express";
+import mongoose from "mongoose";
 import { Paciente } from "../models/paciente.js";
+import { Record } from "../models/records.js";
+import { Medication } from "../models/medications.js";
 
 export const pacienteRouter = express.Router();
 
@@ -165,40 +168,62 @@ pacienteRouter.patch("/patients/:id", async (req, res) => {
 });
 
 pacienteRouter.delete("/patients", async (req, res) => {
-  if (!req.query.IdNumber && !req.query.name) {
-    res.status(400).send({
-      error: "Se necesita un numero de identificacion o nombre",
-    });
-  } else {
+  try {
+    if (!req.query.IdNumber && !req.query.name) {
+      res.status(400).send({
+        error: "Se necesita un numero de identificacion o nombre",
+      });
+    }
     const filter = req.query.IdNumber
       ? { IdNumber: req.query.IdNumber.toString() }
       : { name: req.query.name!.toString() };
-    Paciente.findOne(filter)
-      .then((paciente) => {
-        if (!paciente) {
-          res.status(404).send();
-        } else {
-          return Paciente.findByIdAndDelete(paciente._id).then((paciente) => {
-            res.send(paciente);
-          });
+
+    const patientIds = (await Paciente.find(filter)).map((p) => p._id);
+    const record = await Record.find({ patient: { $in: patientIds } });
+    for (const r of record) {
+      const medicines = r.prescribedMedications;
+      for (const m in medicines) {
+        const medication = await Medication.findById(medicines[m].medication);
+        if (medication) {
+          medication.stockDisponible += medicines[m].units;
+          await medication.save();
         }
-      })
-      .catch((error) => {
-        res.status(500).send(error);
-      });
+      }
+      const delete_record = await Record.findByIdAndDelete(r._id);
+    }
+    const result = await Paciente.deleteMany(filter);
+    if (result.deletedCount === 0) {
+      return res.status(404).send();
+    }
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error);
   }
 });
 
 pacienteRouter.delete("/patients/:id", async (req, res) => {
-  Paciente.findByIdAndDelete(req.params.id)
-    .then((paciente) => {
-      if (!paciente) {
-        res.status(404).send();
-      } else {
-        res.send(paciente);
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).send({ error: "ID inválido" });
+    }
+    const record = await Record.find({ patient: req.params.id });
+    for (const r of record) {
+      const medicines = r.prescribedMedications;
+      for (const m in medicines) {
+        const medication = await Medication.findById(medicines[m].medication);
+        if (medication) {
+          medication.stockDisponible += medicines[m].units;
+          await medication.save();
+        }
       }
-    })
-    .catch((error) => {
-      res.status(500).send(error);
-    });
+      const delete_record = await Record.findByIdAndDelete(r._id);
+    }
+    const result = await Paciente.findByIdAndDelete(req.params.id);
+    if (!result) {
+      return res.status(404).send();
+    }
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });

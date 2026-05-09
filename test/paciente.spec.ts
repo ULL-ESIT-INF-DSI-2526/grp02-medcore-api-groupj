@@ -496,7 +496,7 @@ describe("DELETE /patients", () => {
   });
 
   test("internal server error", async () => {
-    vi.spyOn(Paciente, "findOneAndDelete").mockRejectedValueOnce(
+    vi.spyOn(Paciente, "deleteMany").mockRejectedValueOnce(
       new Error("Random Error"),
     );
     await request(app).delete("/patients?name=Pedro Gonzalez").expect(500);
@@ -516,6 +516,6 @@ describe("DELETE /patients/:id", () => {
 
   test("Internal server error", async () => {
     const paciente = await Paciente.findOne({ name: "Ana Gonzalez" });
-    await request(app).delete(`/patients/${paciente?._id}`).expect(500);
+    await request(app).delete(`/patients/${paciente?._id}`).expect(400);
   });
 });
