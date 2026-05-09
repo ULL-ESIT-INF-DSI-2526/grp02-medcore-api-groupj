@@ -1,5 +1,6 @@
 import express from "express";
 import { Medication } from "../models/medications.js";
+import { Record } from "../models/records.js";
 import mongoose from "mongoose";
 
 export const medicationRouter = express.Router();
@@ -144,5 +145,77 @@ medicationRouter.patch("/medications/:id", async (req, res) => {
       }
     }
     return res.status(500).send({ error: "Error interno del servidor" });
+  }
+});
+
+medicationRouter.delete("/medications", async (req, res) => {
+  try {
+    const name = req.query.name;
+    const activo = req.query.nombreActivo;
+    const codigo = req.query.codigoNacional;
+
+    if (!name && !activo && !codigo) {
+      return res
+        .status(400)
+        .send({ error: "Se necesita al menos un filtro para eliminar" });
+    }
+
+    const filter: any = {};
+    if (name) filter.name = name;
+    if (activo) filter.nombreActivo = activo;
+    if (codigo) filter.codigoNacional = codigo;
+
+    const medicationToDelete = await Medication.findOne(filter);
+    if (!medicationToDelete) {
+      return res.status(404).send({ error: "Medicación no encontrada" });
+    }
+
+    // Verificar si hay records que contengan esta medicación
+    const recordsWithMedication = await Record.findOne({
+      "prescribedMedications.medication": medicationToDelete._id,
+    });
+
+    if (recordsWithMedication) {
+      return res.status(409).send({
+        error:
+          "No se puede eliminar la medicación. Existe al menos un record que la contiene",
+      });
+    }
+
+    const deleted = await Medication.findOneAndDelete(filter);
+    res.send(deleted);
+  } catch (error) {
+    res.status(500).send({ error: "Error interno del servidor" });
+  }
+});
+
+medicationRouter.delete("/medications/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ error: "ID invalido" });
+    }
+
+    const medicationToDelete = await Medication.findById(id);
+    if (!medicationToDelete) {
+      return res.status(404).send({ error: "Medicación no encontrada" });
+    }
+
+    // Verificar si hay records que contengan esta medicación
+    const recordsWithMedication = await Record.findOne({
+      "prescribedMedications.medication": id,
+    });
+
+    if (recordsWithMedication) {
+      return res.status(409).send({
+        error:
+          "No se puede eliminar la medicación. Existe al menos un record que la contiene",
+      });
+    }
+
+    const deleted = await Medication.findByIdAndDelete(id);
+    res.send(deleted);
+  } catch (error) {
+    res.status(500).send({ error: "Error interno del servidor" });
   }
 });
