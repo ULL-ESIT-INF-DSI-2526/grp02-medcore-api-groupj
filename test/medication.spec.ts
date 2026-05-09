@@ -210,6 +210,18 @@ describe("GET /medications", () => {
       .expect(400);
   });
 
+  test("Should return 400 if nombreActivo is not a string", async () => {
+    await request(app)
+      .get("/medications?nombreActivo=Clarine&nombreActivo=Morine")
+      .expect(400);
+  });
+
+  test("Should return 400 if codigoNacional is not a string", async () => {
+    await request(app)
+      .get("/medications?codigoNacional=123456&codigoNacional=654321")
+      .expect(400);
+  });
+
   test("Should return 500 on internal error (GET /medications)", async () => {
     vi.spyOn(Medication, "find").mockImplementationOnce(() => {
       throw new Error("DB error");

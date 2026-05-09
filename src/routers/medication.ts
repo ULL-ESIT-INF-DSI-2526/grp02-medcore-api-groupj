@@ -78,22 +78,26 @@ medicationRouter.get("/medications/:id", async (req, res) => {
 
 medicationRouter.patch("/medications", async (req, res) => {
   try {
-    const cn = req.query.codigoNacional;
-    if (typeof cn !== "string" || cn.trim() === "") {
-      return res
-        .status(400)
-        .send({ error: "Se necesita el codigo nacional valido" });
+    const name = req.query.name;
+    const activo = req.query.nombreActivo;
+    const codigo = req.query.codigoNacional;
+
+    if (!name && !activo && !codigo) {
+      return res.status(400).send({ error: "Nombre invalido" });
     }
     if (!req.body || Object.keys(req.body).length === 0) {
       return res
         .status(400)
         .send({ error: "Se requieren campos para modificar" });
     }
-    const updated = await Medication.findOneAndUpdate(
-      { codigoNacional: cn },
-      req.body,
-      { returnDocument: "after", runValidators: true },
-    );
+    const filter: any = {};
+    if (name) filter.name = name;
+    if (activo) filter.nombreActivo = activo;
+    if (codigo) filter.codigoNacional = codigo;
+    const updated = await Medication.findOneAndUpdate(filter, req.body, {
+      returnDocument: "after",
+      runValidators: true,
+    });
     if (!updated) {
       return res.status(404).send({ error: "No encontrado" });
     }
