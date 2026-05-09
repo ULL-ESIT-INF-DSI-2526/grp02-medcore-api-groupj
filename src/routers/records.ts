@@ -222,3 +222,31 @@ recordRouter.patch("/records/:id", async (req, res) => {
   }
 });
 
+recordRouter.delete("/records/:id", async (req, res) => {
+  const rollback1: RollbackMedication[] = [];
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).send({ error: "ID invalido" });
+    }
+    const record = await Record.findById(id);
+    if (!record) {
+      return res.status(404).send({ error: "No se encontro el registro" });
+    }
+    getRollback(record.prescribedMedications, rollback1);
+    await updateMedicationStock(rollback1, 1);
+    await record.deleteOne();
+    res.send(record);
+  }
+  catch {
+  if (rollback1.length > 0) {
+    try {
+      await updateMedicationStock(rollback1, -1);
+    }
+    catch (rollbackError) {
+      console.error(rollbackError);
+    }
+    return res.status(500).send({error: "Error interno del servidor"});
+  }
+  }
+})
