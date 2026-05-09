@@ -165,12 +165,15 @@ pacienteRouter.patch("/patients/:id", async (req, res) => {
 });
 
 pacienteRouter.delete("/patients", async (req, res) => {
-  if (!req.query.name) {
+  if (!req.query.IdNumber && !req.query.name) {
     res.status(400).send({
-      error: "Es necesario un nombre",
+      error: "Se necesita un numero de identificacion o nombre",
     });
   } else {
-    Paciente.findOne({ name: req.query.name.toString() })
+    const filter = req.query.IdNumber
+      ? { IdNumber: req.query.IdNumber.toString() }
+      : { name: req.query.name!.toString() };
+    Paciente.findOne(filter)
       .then((paciente) => {
         if (!paciente) {
           res.status(404).send();
