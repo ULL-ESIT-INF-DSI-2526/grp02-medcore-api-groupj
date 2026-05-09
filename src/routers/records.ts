@@ -117,6 +117,30 @@ recordRouter.get("/records", async (req, res) => {
   }
 });
 
+recordRouter.get("/records/patient", async (req, res) => {
+  try {
+    const idDocument = req.query.idNumber;
+    if (!idDocument || typeof idDocument !== "string") {
+      return res.status(400).send({ error: "El parámetro idNumber es requerido y debe ser string" });
+    }
+    const patientId = await getPatientID(idDocument);
+    const records = await Record.find({ patient: patientId }).sort({
+      admissionDateTime: 1,
+    });
+    if (records.length === 0) {
+      return res.status(404).send({ error: "No se encontraron registros" });
+    }
+    return res.send(records);
+  } catch (error: unknown) {
+    if (error instanceof ValidationErrors) {
+      return res
+        .status(error.statusCode)
+        .send({ error: error.message, details: error.errors });
+    }
+    return res.status(500).send({ error: "Error interno del servidor" });
+  }
+});
+
 recordRouter.get("/records/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -161,7 +185,12 @@ recordRouter.patch("/records/:id", async (req, res) => {
     if (idDocument) validateString(idDocument, errors, true);
     if (medicalLicense) validateString(medicalLicense, errors, false);
     if (errors.length > 0) throw new ValidationErrors(errors);
-    validatePatchDates(record, admissionDateTime, dischargeDateTime, recordStatus);
+    validatePatchDates(
+      record,
+      admissionDateTime,
+      dischargeDateTime,
+      recordStatus,
+    );
     let prescribedMedications;
     let amount;
     if (medicationList) {
@@ -169,56 +198,58 @@ recordRouter.patch("/records/:id", async (req, res) => {
       if (errors.length > 0) throw new ValidationErrors(errors);
       getRollback(record.prescribedMedications, rollback1);
       await updateMedicationStock(rollback1, 1);
-      ({prescribedMedications, amount} = await processMedications(medicationList, rollback2));
+      ({ prescribedMedications, amount } = await processMedications(
+        medicationList,
+        rollback2,
+      ));
     }
     if (idDocument) record.patient = await getPatientID(idDocument);
-    if (medicalLicense) record.responsibleStaff = await getStaffID(medicalLicense);
+    if (medicalLicense)
+      record.responsibleStaff = await getStaffID(medicalLicense);
     if (recordType) record.recordType = recordType;
-    if (admissionDateTime) record.admissionDateTime = new Date(admissionDateTime);
+    if (admissionDateTime)
+      record.admissionDateTime = new Date(admissionDateTime);
     if (recordStatus) record.recordStatus = recordStatus;
     if (reason) record.reason = reason;
     if (diagnosis) record.diagnosis = diagnosis;
-    if (prescribedMedications) record.prescribedMedications = prescribedMedications;
+    if (prescribedMedications)
+      record.prescribedMedications = prescribedMedications;
     if (amount !== undefined) record.amount = amount;
     if (record.recordStatus === "abierto") record.dischargeDateTime = undefined;
     else {
       if (dischargeDateTime) {
         record.dischargeDateTime = new Date(dischargeDateTime);
-      }
-      else if (!record.dischargeDateTime) {
+      } else if (!record.dischargeDateTime) {
         record.dischargeDateTime = new Date();
       }
     }
     await record.save();
     res.send(record);
-  }
-  catch (error: unknown) {
+  } catch (error: unknown) {
     if (rollback2.length > 0) {
       try {
-        await updateMedicationStock( rollback2, 1 );
-      }
-      catch (rollbackError) {
+        await updateMedicationStock(rollback2, 1);
+      } catch (rollbackError) {
         console.error(rollbackError);
       }
     }
     if (rollback1.length > 0) {
       try {
-        await updateMedicationStock( rollback1, -1);
-      }
-      catch (rollbackError) {
+        await updateMedicationStock(rollback1, -1);
+      } catch (rollbackError) {
         console.error(rollbackError);
       }
     }
     if (error instanceof ValidationErrors) {
-      return res.status(error.statusCode).send({ error: error.message, details: error.errors });
-    }
-    else if (error instanceof AppError) {
+      return res
+        .status(error.statusCode)
+        .send({ error: error.message, details: error.errors });
+    } else if (error instanceof AppError) {
       return res.status(error.statusCode).send({ error: error.message });
+    } else if (error instanceof Error && error.name === "ValidationError") {
+      return res.status(400).send({ error: error.message });
     }
-    else if (error instanceof Error && error.name === "ValidationError") {
-      return res.status(400).send({error: error.message});
-    }
-    return res.status(500).send({error: "Error interno del servidor"});
+    return res.status(500).send({ error: "Error interno del servidor" });
   }
 });
 
@@ -237,16 +268,14 @@ recordRouter.delete("/records/:id", async (req, res) => {
     await updateMedicationStock(rollback1, 1);
     await record.deleteOne();
     res.send(record);
-  }
-  catch {
-  if (rollback1.length > 0) {
-    try {
-      await updateMedicationStock(rollback1, -1);
+  } catch {
+    if (rollback1.length > 0) {
+      try {
+        await updateMedicationStock(rollback1, -1);
+      } catch (rollbackError) {
+        console.error(rollbackError);
+      }
+      return res.status(500).send({ error: "Error interno del servidor" });
     }
-    catch (rollbackError) {
-      console.error(rollbackError);
-    }
-    return res.status(500).send({error: "Error interno del servidor"});
   }
-  }
-})
+});
