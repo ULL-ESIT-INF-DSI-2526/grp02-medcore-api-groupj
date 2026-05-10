@@ -6,6 +6,33 @@ import { Medication } from "../models/medications.js";
 
 export const patientRouter = express.Router();
 
+/**
+ * @swagger
+ * /patients:
+ *   post:
+ *     summary: Crear un nuevo paciente
+ *     tags:
+ *       - Patients
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Patient'
+ *     responses:
+ *       201:
+ *         description: Paciente creado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Patient'
+ *       400:
+ *         description: Error de validación
+ *       409:
+ *         description: Paciente duplicado
+ *       500:
+ *         description: Error interno del servidor
+ */
 patientRouter.post("/patients", async (req, res) => {
   const patient = new Patient(req.body);
   try {
@@ -24,6 +51,40 @@ patientRouter.post("/patients", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /patients:
+ *   get:
+ *     summary: Obtener pacientes
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Nombre del paciente
+ *       - in: query
+ *         name: IdNumber
+ *         schema:
+ *           type: string
+ *         description: Documento de identidad del paciente
+ *     responses:
+ *       200:
+ *         description: Lista de pacientes encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Patient'
+ *       400:
+ *         description: Parámetros inválidos
+ *       404:
+ *         description: No se encontraron pacientes
+ *       500:
+ *         description: Error interno del servidor
+ */
 patientRouter.get("/patients", async (req, res) => {
   const name = req.query.name;
   const IdNumber = req.query.IdNumber;
@@ -55,6 +116,32 @@ patientRouter.get("/patients", async (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /patients/{id}:
+ *   get:
+ *     summary: Obtener un paciente por ID
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del paciente
+ *     responses:
+ *       200:
+ *         description: Paciente encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Patient'
+ *       404:
+ *         description: Paciente no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
 patientRouter.get("/patients/:id", async (req, res) => {
   Patient.findById(req.params.id)
     .then((patient) => {
@@ -69,6 +156,40 @@ patientRouter.get("/patients/:id", async (req, res) => {
     });
 });
 
+/**
+ * @swagger
+ * /patients:
+ *   patch:
+ *     summary: Actualizar pacientes por nombre o documento
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: query
+ *         name: IdNumber
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Patient'
+ *     responses:
+ *       200:
+ *         description: Paciente actualizado correctamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Paciente no encontrado
+ *       409:
+ *         description: Actualización no permitida
+ *       500:
+ *         description: Error interno del servidor
+ */
 patientRouter.patch("/patients", async (req, res) => {
   if (!req.query.IdNumber && !req.query.name) {
     res.status(400).send({
@@ -122,6 +243,38 @@ patientRouter.patch("/patients", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /patients/{id}:
+ *   patch:
+ *     summary: Actualizar paciente por ID
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del paciente
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Patient'
+ *     responses:
+ *       200:
+ *         description: Paciente actualizado correctamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Paciente no encontrado
+ *       409:
+ *         description: Actualización no permitida
+ *       500:
+ *         description: Error interno del servidor
+ */
 patientRouter.patch("/patients/:id", async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     res.status(400).send({
@@ -167,6 +320,32 @@ patientRouter.patch("/patients/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /patients:
+ *   delete:
+ *     summary: Eliminar pacientes por nombre o documento
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: query
+ *         name: IdNumber
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Pacientes eliminados correctamente
+ *       400:
+ *         description: Parámetros inválidos
+ *       404:
+ *         description: Paciente no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
 patientRouter.delete("/patients", async (req, res) => {
   try {
     if (!req.query.IdNumber && !req.query.name) {
@@ -201,6 +380,30 @@ patientRouter.delete("/patients", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /patients/{id}:
+ *   delete:
+ *     summary: Eliminar paciente por ID
+ *     tags:
+ *       - Patients
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del paciente
+ *     responses:
+ *       200:
+ *         description: Paciente eliminado correctamente
+ *       400:
+ *         description: ID inválido
+ *       404:
+ *         description: Paciente no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */ 
 patientRouter.delete("/patients/:id", async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

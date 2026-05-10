@@ -6,6 +6,29 @@ import { MEDICAL_SPECIALTIES } from "../types/staff/specialty.js";
 
 export const staffRouter = express.Router();
 
+/**
+ * @swagger
+ * /staff:
+ *   post:
+ *     summary: Crear un nuevo miembro del personal sanitario
+ *     tags:
+ *       - Staff
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Staff'
+ *     responses:
+ *       201:
+ *         description: Miembro del personal creado correctamente
+ *       400:
+ *         description: Error de validación
+ *       409:
+ *         description: Número de colegiado duplicado
+ *       500:
+ *         description: Error interno del servidor
+ */
 staffRouter.post("/staff", async (req, res) => {
   try {
     const member = new Staff(req.body);
@@ -26,6 +49,34 @@ staffRouter.post("/staff", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /staff:
+ *   get:
+ *     summary: Obtener miembros del personal sanitario
+ *     tags:
+ *       - Staff
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Nombre del miembro del personal
+ *       - in: query
+ *         name: medicalSpecialty
+ *         schema:
+ *           type: string
+ *         description: Especialidad médica
+ *     responses:
+ *       200:
+ *         description: Lista de personal sanitario
+ *       400:
+ *         description: Parámetros inválidos
+ *       404:
+ *         description: No se encontraron resultados
+ *       500:
+ *         description: Error interno del servidor
+ */
 staffRouter.get("/staff", async (req, res) => {
   try {
     const name = req.query.name;
@@ -60,6 +111,29 @@ staffRouter.get("/staff", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /staff/{id}:
+ *   get:
+ *     summary: Obtener un miembro del personal por ID
+ *     tags:
+ *       - Staff
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Miembro del personal encontrado
+ *       400:
+ *         description: ID inválido
+ *       404:
+ *         description: Miembro del personal no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
 staffRouter.get("/staff/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -78,6 +152,37 @@ staffRouter.get("/staff/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /staff:
+ *   patch:
+ *     summary: Actualizar un miembro del personal mediante número de colegiado
+ *     tags:
+ *       - Staff
+ *     parameters:
+ *       - in: query
+ *         name: medicalLicenseNum
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Staff'
+ *     responses:
+ *       200:
+ *         description: Miembro actualizado correctamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: No encontrado
+ *       409:
+ *         description: Conflicto de datos
+ *       500:
+ *         description: Error interno del servidor
+ */
 staffRouter.patch("/staff", async (req, res) => {
   try {
     const ml = req.query.medicalLicenseNum;
@@ -115,6 +220,37 @@ staffRouter.patch("/staff", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /staff/{id}:
+ *   patch:
+ *     summary: Actualizar un miembro del personal por ID
+ *     tags:
+ *       - Staff
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Staff'
+ *     responses:
+ *       200:
+ *         description: Miembro actualizado correctamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: No encontrado
+ *       409:
+ *         description: Conflicto de datos
+ *       500:
+ *         description: Error interno del servidor
+ */
 staffRouter.patch("/staff/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -149,6 +285,31 @@ staffRouter.patch("/staff/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /staff:
+ *   delete:
+ *     summary: Eliminar un miembro del personal mediante número de colegiado
+ *     tags:
+ *       - Staff
+ *     parameters:
+ *       - in: query
+ *         name: medicalLicenseNum
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Miembro eliminado correctamente
+ *       400:
+ *         description: Número de licencia inválido
+ *       404:
+ *         description: Miembro no encontrado
+ *       409:
+ *         description: El miembro tiene registros asociados
+ *       500:
+ *         description: Error interno del servidor
+ */
 staffRouter.delete("/staff", async (req, res) => {
   try {
     const ml = req.query.medicalLicenseNum;
@@ -189,6 +350,31 @@ staffRouter.delete("/staff", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /staff/{id}:
+ *   delete:
+ *     summary: Eliminar un miembro del personal por ID
+ *     tags:
+ *       - Staff
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Miembro eliminado correctamente
+ *       400:
+ *         description: ID inválido
+ *       404:
+ *         description: Miembro no encontrado
+ *       409:
+ *         description: El miembro tiene registros asociados
+ *       500:
+ *         description: Error interno del servidor
+ */
 staffRouter.delete("/staff/:id", async (req, res) => {
   try {
     const { id } = req.params;

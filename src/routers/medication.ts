@@ -5,6 +5,29 @@ import mongoose from "mongoose";
 
 export const medicationRouter = express.Router();
 
+/**
+ * @swagger
+ * /medications:
+ *   post:
+ *     summary: Crear un nuevo medicamento
+ *     tags:
+ *       - Medications
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Medication'
+ *     responses:
+ *       201:
+ *         description: Medicamento creado correctamente
+ *       400:
+ *         description: Error de validación
+ *       409:
+ *         description: Código nacional duplicado
+ *       500:
+ *         description: Error interno del servidor
+ */
 medicationRouter.post("/medications", async (req, res) => {
   const medication = new Medication(req.body);
   try {
@@ -23,6 +46,39 @@ medicationRouter.post("/medications", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /medications:
+ *   get:
+ *     summary: Obtener medicamentos
+ *     tags:
+ *       - Medications
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Nombre comercial del medicamento
+ *       - in: query
+ *         name: nombreActivo
+ *         schema:
+ *           type: string
+ *         description: Nombre del principio activo
+ *       - in: query
+ *         name: codigoNacional
+ *         schema:
+ *           type: string
+ *         description: Código nacional del medicamento
+ *     responses:
+ *       200:
+ *         description: Lista de medicamentos
+ *       400:
+ *         description: Parámetros inválidos
+ *       404:
+ *         description: No se encontraron resultados
+ *       500:
+ *         description: Error interno del servidor
+ */
 medicationRouter.get("/medications", async (req, res) => {
   try {
     const name = req.query.name;
@@ -59,6 +115,29 @@ medicationRouter.get("/medications", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /medications/{id}:
+ *   get:
+ *     summary: Obtener un medicamento por ID
+ *     tags:
+ *       - Medications
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Medicamento encontrado
+ *       400:
+ *         description: ID inválido
+ *       404:
+ *         description: Medicamento no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
 medicationRouter.get("/medications/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -77,6 +156,44 @@ medicationRouter.get("/medications/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /medications:
+ *   patch:
+ *     summary: Actualizar un medicamento mediante filtros
+ *     tags:
+ *       - Medications
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: nombreActivo
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: codigoNacional
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Medication'
+ *     responses:
+ *       200:
+ *         description: Medicamento actualizado correctamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Medicamento no encontrado
+ *       409:
+ *         description: Código nacional duplicado
+ *       500:
+ *         description: Error interno del servidor
+ */
 medicationRouter.patch("/medications", async (req, res) => {
   try {
     const name = req.query.name;
@@ -116,6 +233,37 @@ medicationRouter.patch("/medications", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /medications/{id}:
+ *   patch:
+ *     summary: Actualizar un medicamento por ID
+ *     tags:
+ *       - Medications
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Medication'
+ *     responses:
+ *       200:
+ *         description: Medicamento actualizado correctamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Medicamento no encontrado
+ *       409:
+ *         description: Código nacional duplicado
+ *       500:
+ *         description: Error interno del servidor
+ */
 medicationRouter.patch("/medications/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -148,6 +296,38 @@ medicationRouter.patch("/medications/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /medications:
+ *   delete:
+ *     summary: Eliminar un medicamento mediante filtros
+ *     tags:
+ *       - Medications
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: nombreActivo
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: codigoNacional
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Medicamento eliminado correctamente
+ *       400:
+ *         description: Filtros inválidos
+ *       404:
+ *         description: Medicamento no encontrado
+ *       409:
+ *         description: El medicamento está asociado a registros clínicos
+ *       500:
+ *         description: Error interno del servidor
+ */
 medicationRouter.delete("/medications", async (req, res) => {
   try {
     const name = req.query.name;
@@ -189,6 +369,31 @@ medicationRouter.delete("/medications", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /medications/{id}:
+ *   delete:
+ *     summary: Eliminar un medicamento por ID
+ *     tags:
+ *       - Medications
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Medicamento eliminado correctamente
+ *       400:
+ *         description: ID inválido
+ *       404:
+ *         description: Medicamento no encontrado
+ *       409:
+ *         description: El medicamento está asociado a registros clínicos
+ *       500:
+ *         description: Error interno del servidor
+ */
 medicationRouter.delete("/medications/:id", async (req, res) => {
   try {
     const { id } = req.params;

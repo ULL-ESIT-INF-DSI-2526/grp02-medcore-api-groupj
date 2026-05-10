@@ -20,6 +20,37 @@ import { getRollback } from "../utils/records/rollback/getRollback.js";
 
 export const recordRouter = express.Router();
 
+/**
+ * @swagger
+ * /records:
+ *   post:
+ *     summary: Crear un nuevo registro clínico
+ *     tags:
+ *       - Records
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecordInput'
+ *     responses:
+ *       201:
+ *         description: Registro clínico creado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Record'
+ *       400:
+ *         description: Error de validación
+ *       403:
+ *         description: Médico inactivo o medicamento caducado
+ *       404:
+ *         description: Paciente, médico o medicamento no encontrado
+ *       409:
+ *         description: Stock insuficiente
+ *       500:
+ *         description: Error interno del servidor
+ */
 recordRouter.post("/records", async (req, res) => {
   const rollback: RollbackMedication[] = [];
   try {
@@ -79,6 +110,37 @@ recordRouter.post("/records", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records:
+ *   post:
+ *     summary: Crear un nuevo registro clínico
+ *     tags:
+ *       - Records
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecordInput'
+ *     responses:
+ *       201:
+ *         description: Registro clínico creado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Record'
+ *       400:
+ *         description: Error de validación
+ *       403:
+ *         description: Médico inactivo o medicamento caducado
+ *       404:
+ *         description: Paciente, médico o medicamento no encontrado
+ *       409:
+ *         description: Stock insuficiente
+ *       500:
+ *         description: Error interno del servidor
+ */
 recordRouter.get("/records", async (req, res) => {
   try {
     const { idDocument, startDate, endDate, recordType } = req.query;
@@ -115,6 +177,46 @@ recordRouter.get("/records", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records/patient:
+ *   get:
+ *     summary: Obtener registros clínicos de un paciente
+ *     description: |
+ *       Devuelve todos los registros clínicos asociados a un paciente
+ *       utilizando su documento identificativo o número de seguridad social.
+ *       
+ *       Los resultados se devuelven ordenados cronológicamente.
+ *     tags:
+ *       - Records
+ *     parameters:
+ *       - in: query
+ *         name: idNumber
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Documento identificativo o número de seguridad social del paciente
+ *         example: "12345678Z"
+ *
+ *     responses:
+ *       200:
+ *         description: Lista de registros clínicos del paciente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Record'
+ *
+ *       400:
+ *         description: Parámetro idNumber inválido o ausente
+ *
+ *       404:
+ *         description: No se encontraron registros o paciente inexistente
+ *
+ *       500:
+ *         description: Error interno del servidor
+ */
 recordRouter.get("/records/patient", async (req, res) => {
   try {
     const idDocument = req.query.idNumber;
@@ -137,6 +239,42 @@ recordRouter.get("/records/patient", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records/{id}:
+ *   get:
+ *     summary: Obtener un registro clínico por ID
+ *     description: |
+ *       Devuelve un registro clínico concreto utilizando
+ *       su identificador único en MongoDB.
+ *     tags:
+ *       - Records
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Identificador único del registro clínico
+ *         example: "684a1234abcd5678ef901299"
+ *
+ *     responses:
+ *       200:
+ *         description: Registro clínico encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Record'
+ *
+ *       400:
+ *         description: ID inválido
+ *
+ *       404:
+ *         description: Registro clínico no encontrado
+ *
+ *       500:
+ *         description: Error interno del servidor
+ */
 recordRouter.get("/records/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -153,6 +291,76 @@ recordRouter.get("/records/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records/{id}:
+ *   patch:
+ *     summary: Modificar un registro clínico
+ *     description: |
+ *       Permite modificar parcialmente un registro clínico existente.
+ *
+ *       Si se modifica la lista de medicamentos:
+ *       - Se restaura el stock anterior.
+ *       - Se verifica disponibilidad de los nuevos medicamentos.
+ *       - Se descuenta el nuevo stock.
+ *       - Se recalcula automáticamente el importe total.
+ *
+ *       También permite modificar:
+ *       - Paciente
+ *       - Médico responsable
+ *       - Tipo de registro
+ *       - Fechas
+ *       - Diagnóstico
+ *       - Estado
+ *       - Motivo
+ *       
+ *       El paciente y el médico deben enviarse mediante:
+ *       - Documento identificativo
+ *       - Número de colegiado
+ *       
+ *       No mediante ObjectId.
+ *     tags:
+ *       - Records
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Identificador único del registro clínico
+ *         example: "684a1234abcd5678ef901299"
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RecordInput'
+ *
+ *     responses:
+ *       200:
+ *         description: Registro clínico actualizado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Record'
+ *
+ *       400:
+ *         description: Error de validación o cuerpo inválido
+ *
+ *       403:
+ *         description: Médico inactivo o medicamento caducado
+ *
+ *       404:
+ *         description: Registro, paciente, médico o medicamento no encontrado
+ *
+ *       409:
+ *         description: Conflicto de stock insuficiente
+ *
+ *       500:
+ *         description: Error interno del servidor
+ */
 recordRouter.patch("/records/:id", async (req, res) => {
   const rollback1: RollbackMedication[] = [];
   const rollback2: RollbackMedication[] = [];
@@ -249,6 +457,49 @@ recordRouter.patch("/records/:id", async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /records/{id}:
+ *   delete:
+ *     summary: Eliminar un registro clínico
+ *     description: |
+ *       Elimina un registro clínico utilizando su identificador único.
+ *
+ *       Antes de eliminar el registro:
+ *       - Se restaurará automáticamente el stock de todos los medicamentos
+ *         prescritos en el registro.
+ *
+ *       Esta operación se interpreta como una cancelación o corrección
+ *       administrativa del historial clínico.
+ *     tags:
+ *       - Records
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Identificador único del registro clínico
+ *         example: "684a1234abcd5678ef901299"
+ *
+ *     responses:
+ *       200:
+ *         description: Registro clínico eliminado correctamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Record'
+ *
+ *       400:
+ *         description: ID inválido
+ *
+ *       404:
+ *         description: Registro clínico no encontrado
+ *
+ *       500:
+ *         description: Error interno del servidor
+ */
 recordRouter.delete("/records/:id", async (req, res) => {
   const rollback1: RollbackMedication[] = [];
   try {
