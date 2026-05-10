@@ -11,11 +11,11 @@ import request from "supertest";
 import mongoose from "mongoose";
 import { app } from "../../src/app";
 import { connectDB } from "../../src/db/mongoose";
-import { Paciente } from "../../src/models/paciente";
+import { Patient } from "../../src/models/patient";
 import { Record } from "../../src/models/records";
 import { Medication } from "../../src/models/medications";
 
-const primerPaciente = {
+const primerPatient = {
   name: "Pedro Gonzalez",
   dateOfBirth: "1999-11-20",
   IdNumber: "12345678",
@@ -38,12 +38,12 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   vi.clearAllMocks();
-  await Paciente.deleteMany();
-  await new Paciente(primerPaciente).save();
+  await Patient.deleteMany();
+  await new Patient(primerPatient).save();
 });
 
 afterAll(async () => {
-  await Paciente.deleteMany();
+  await Patient.deleteMany();
 });
 
 describe("POST /patients", () => {
@@ -81,7 +81,7 @@ describe("POST /patients", () => {
       bloodType: "A-",
       status: "baja temporal",
     });
-    const secondPacient = await Paciente.findById(response.body._id);
+    const secondPacient = await Patient.findById(response.body._id);
     expect(secondPacient).not.toBe(null);
     expect(secondPacient!.name).to.equal("Jose Perez");
   });
@@ -233,12 +233,12 @@ describe("POST /patients", () => {
       .expect(400);
   });
   test("Unknown non-error should return 500", async () => {
-    vi.spyOn(Paciente.prototype, "save").mockImplementationOnce(() => {
+    vi.spyOn(Patient.prototype, "save").mockImplementationOnce(() => {
       throw "random string error";
     });
     await request(app)
       .post("/patients")
-      .send(primerPaciente)
+      .send(primerPatient)
       .expect(500);
   });
 });
@@ -322,17 +322,17 @@ describe("GET /patients", () => {
   });
 
   test("Internal error", async () => {
-    vi.spyOn(Paciente, "find").mockRejectedValueOnce(new Error("Random error"));
+    vi.spyOn(Patient, "find").mockRejectedValueOnce(new Error("Random error"));
     await request(app).get("/patients").expect(500);
   });
 });
 
 describe("GET /patients/:id", () => {
   test("Should successfully retrieve a pacient by ID", async () => {
-    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+    const patient = await Patient.findOne({ name: "Pedro Gonzalez" });
 
     const response = await request(app)
-      .get(`/patients/${paciente?._id}`)
+      .get(`/patients/${patient?._id}`)
       .expect(200);
 
     expect(response.body).to.include({
@@ -355,7 +355,7 @@ describe("GET /patients/:id", () => {
   });
 
   test("Internal error", async () => {
-    vi.spyOn(Paciente, "findById").mockRejectedValueOnce(
+    vi.spyOn(Patient, "findById").mockRejectedValueOnce(
       new Error("Random error"),
     );
     const fakeId = "507f1f77bcf86cd799439011";
@@ -423,7 +423,7 @@ describe("PATCH /patients", () => {
   });
 
   test("Internal error", async () => {
-    vi.spyOn(Paciente, "findOneAndUpdate").mockRejectedValueOnce(
+    vi.spyOn(Patient, "findOneAndUpdate").mockRejectedValueOnce(
       new Error("Random error"),
     );
     await request(app)
@@ -435,38 +435,38 @@ describe("PATCH /patients", () => {
 
 describe("PATCH /patients/:id", () => {
   test("Correct modification of pacient through ID", async () => {
-    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+    const patient = await Patient.findOne({ name: "Pedro Gonzalez" });
     await request(app)
-      .patch(`/patients/${paciente?._id}`)
+      .patch(`/patients/${patient?._id}`)
       .send({ status: "baja temporal" })
       .expect(200);
   });
 
   test("Error when no modification is provided", async () => {
-    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
-    await request(app).patch(`/patients/${paciente?._id}`).send({}).expect(400);
+    const patient = await Patient.findOne({ name: "Pedro Gonzalez" });
+    await request(app).patch(`/patients/${patient?._id}`).send({}).expect(400);
   });
 
   test("Error when trying to modify a immutable variable", async () => {
-    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+    const patient = await Patient.findOne({ name: "Pedro Gonzalez" });
     await request(app)
-      .patch(`/patients/${paciente?._id}`)
+      .patch(`/patients/${patient?._id}`)
       .send({ bloodType: "A+" })
       .expect(200);
   });
 
   test("Error when trying to modify a immutable variable", async () => {
-    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+    const patient = await Patient.findOne({ name: "Pedro Gonzalez" });
     await request(app)
-      .patch(`/patients/${paciente?._id}`)
+      .patch(`/patients/${patient?._id}`)
       .send({ bloodType: "C+" })
       .expect(500);
   });
 
   test("Error when trying to modify a immutable variable", async () => {
-    const paciente = await Paciente.findOne({ name: "Pedro Gonzalez" });
+    const patient = await Patient.findOne({ name: "Pedro Gonzalez" });
     await request(app)
-      .patch(`/patients/${paciente?._id}`)
+      .patch(`/patients/${patient?._id}`)
       .send({ diet: "Fish" })
       .expect(409);
   });
@@ -480,9 +480,9 @@ describe("PATCH /patients/:id", () => {
   });
 
   test("Internal server error", async () => {
-    const paciente = await Paciente.findOne({ name: "Jose Angel" });
+    const patient = await Patient.findOne({ name: "Jose Angel" });
     await request(app)
-      .patch(`/patients/${paciente?._id}`)
+      .patch(`/patients/${patient?._id}`)
       .send({ status: "baja temporal" })
       .expect(500);
   });
@@ -496,16 +496,16 @@ describe("DELETE /patients", () => {
   });
 
   test("Delete a pacient from the system using IdNumber", async () => {
-    const paciente = await Paciente.findOne({
+    const patient = await Patient.findOne({
       name: "Pedro Gonzalez",
     });
     await request(app)
-      .delete(`/patients?IdNumber=${paciente!.IdNumber}`)
+      .delete(`/patients?IdNumber=${patient!.IdNumber}`)
       .expect(200);
   });
 
   test("Should restore medication stock when deleting patient", async () => {
-    const paciente = await Paciente.findOne({
+    const patient = await Patient.findOne({
       name: "Pedro Gonzalez",
     });
     const saveMock = vi.fn();
@@ -514,7 +514,7 @@ describe("DELETE /patients", () => {
       save: saveMock,
     } as any);
     await Record.create({
-      patient: paciente!._id,
+      patient: patient!._id,
       responsibleStaff: new mongoose.Types.ObjectId(),
       recordType: "consulta_ambulatoria",
       reason: "Dolor",
@@ -530,13 +530,13 @@ describe("DELETE /patients", () => {
       recordStatus: "cerrado",
     });
     await request(app)
-      .delete(`/patients?name=${paciente!.name}`)
+      .delete(`/patients?name=${patient!.name}`)
       .expect(200);
     expect(saveMock).toHaveBeenCalled();
   });
 
   test("Delete a pacient with records and restore medication stock", async () => {
-    const paciente = await Paciente.findOne({
+    const patient = await Patient.findOne({
       name: "Pedro Gonzalez",
     });
     const medication = await Medication.create({
@@ -553,7 +553,7 @@ describe("DELETE /patients", () => {
       contradicciones: [],
     });
     const record = await Record.create({
-      patient: paciente!._id,
+      patient: patient!._id,
       responsibleStaff: new mongoose.Types.ObjectId(),
       recordType: "consulta_ambulatoria",
       reason: "Dolor",
@@ -569,7 +569,7 @@ describe("DELETE /patients", () => {
       recordStatus: "cerrado",
     });
     await request(app)
-      .delete(`/patients?name=${paciente!.name}`)
+      .delete(`/patients?name=${patient!.name}`)
       .expect(200);
     const deletedRecord = await Record.findById(record._id);
     expect(deletedRecord).toBeNull();
@@ -586,7 +586,7 @@ describe("DELETE /patients", () => {
   });
 
   test("Internal server error", async () => {
-    vi.spyOn(Paciente, "deleteMany").mockRejectedValueOnce(
+    vi.spyOn(Patient, "deleteMany").mockRejectedValueOnce(
       new Error("Random Error"),
     );
     await request(app)
@@ -597,7 +597,7 @@ describe("DELETE /patients", () => {
 
 describe("DELETE /patients/:id", () => {
   test("Delete a pacient with records by ID", async () => {
-    const paciente = await Paciente.findOne({
+    const patient = await Patient.findOne({
       name: "Pedro Gonzalez",
     });
     const medication = await Medication.create({
@@ -614,7 +614,7 @@ describe("DELETE /patients/:id", () => {
       contradicciones: [],
     });
     const record = await Record.create({
-      patient: paciente!._id,
+      patient: patient!._id,
       responsibleStaff: new mongoose.Types.ObjectId(),
       recordType: "consulta_ambulatoria",
       reason: "Dolor",
@@ -630,14 +630,14 @@ describe("DELETE /patients/:id", () => {
       recordStatus: "cerrado",
     });
     await request(app)
-      .delete(`/patients/${paciente?._id}`)
+      .delete(`/patients/${patient?._id}`)
       .expect(200);
     const deletedRecord = await Record.findById(record._id);
     expect(deletedRecord).toBeNull();
   });
 
   test("Should restore medication stock when deleting patient by ID", async () => {
-    const paciente = await Paciente.findOne({
+    const patient = await Patient.findOne({
       name: "Pedro Gonzalez",
     });
     const saveMock = vi.fn();
@@ -646,7 +646,7 @@ describe("DELETE /patients/:id", () => {
       save: saveMock,
     } as any);
     await Record.create({
-      patient: paciente!._id,
+      patient: patient!._id,
       responsibleStaff: new mongoose.Types.ObjectId(),
       recordType: "consulta_ambulatoria",
       reason: "Dolor",
@@ -662,17 +662,17 @@ describe("DELETE /patients/:id", () => {
       recordStatus: "cerrado",
     });
     await request(app)
-      .delete(`/patients/${paciente!._id}`)
+      .delete(`/patients/${patient!._id}`)
       .expect(200);
     expect(saveMock).toHaveBeenCalled();
   });
 
   test("Should continue deleting patient if medication does not exist", async () => {
-    const paciente = await Paciente.findOne({
+    const patient = await Patient.findOne({
       name: "Pedro Gonzalez",
     });
     await Record.create({
-      patient: paciente!._id,
+      patient: patient!._id,
       responsibleStaff: new mongoose.Types.ObjectId(),
       recordType: "consulta_ambulatoria",
       reason: "Dolor",
@@ -689,7 +689,7 @@ describe("DELETE /patients/:id", () => {
     });
     vi.spyOn(Medication, "findById").mockResolvedValueOnce(null);
     await request(app)
-      .delete(`/patients/${paciente!._id}`)
+      .delete(`/patients/${patient!._id}`)
       .expect(200);
   });
 
@@ -707,14 +707,14 @@ describe("DELETE /patients/:id", () => {
   });
 
   test("Internal server error", async () => {
-    vi.spyOn(Paciente, "findByIdAndDelete").mockRejectedValueOnce(
+    vi.spyOn(Patient, "findByIdAndDelete").mockRejectedValueOnce(
       new Error("Random Error"),
     );
-    const paciente = await Paciente.findOne({
+    const patient = await Patient.findOne({
       name: "Pedro Gonzalez",
     });
     await request(app)
-      .delete(`/patients/${paciente?._id}`)
+      .delete(`/patients/${patient?._id}`)
       .expect(500);
   });
 });

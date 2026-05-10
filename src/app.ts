@@ -1,5 +1,5 @@
 import express from "express";
-import { pacienteRouter } from "./routers/paciente.js";
+import { patientRouter } from "./routers/patient.js";
 import { defaultRouter } from "./routers/default.js";
 import { staffRouter } from "./routers/staff.js";
 import { medicationRouter } from "./routers/medication.js";
@@ -20,11 +20,7 @@ app.use(express.json());
  * para mejorar la legibilidad de las respuestas.
  */
 app.set("json spaces", 2);
-
-/**
- * Registro de routers de la aplicación.
- */
-app.use(pacienteRouter);
+app.use(patientRouter);
 app.use(staffRouter);
 app.use(medicationRouter);
 app.use(recordRouter);

@@ -1,16 +1,16 @@
 import express from "express";
 import mongoose from "mongoose";
-import { Paciente } from "../models/paciente.js";
+import { Patient } from "../models/patient.js";
 import { Record } from "../models/records.js";
 import { Medication } from "../models/medications.js";
 
-export const pacienteRouter = express.Router();
+export const patientRouter = express.Router();
 
-pacienteRouter.post("/patients", async (req, res) => {
-  const paciente = new Paciente(req.body);
+patientRouter.post("/patients", async (req, res) => {
+  const patient = new Patient(req.body);
   try {
-    await paciente.save();
-    res.status(201).send(paciente);
+    await patient.save();
+    res.status(201).send(patient);
   } catch (error) {
     if (error instanceof Error) {
       if (error.message.includes("duplicate key")) {
@@ -24,7 +24,7 @@ pacienteRouter.post("/patients", async (req, res) => {
   }
 });
 
-pacienteRouter.get("/patients", async (req, res) => {
+patientRouter.get("/patients", async (req, res) => {
   const name = req.query.name;
   const IdNumber = req.query.IdNumber;
   if (name !== undefined && !name.toString().trim()) {
@@ -42,7 +42,7 @@ pacienteRouter.get("/patients", async (req, res) => {
   const filter: any = {};
   if (name) filter.name = name;
   if (IdNumber) filter.IdNumber = IdNumber;
-  Paciente.find(filter)
+  Patient.find(filter)
     .then((pacientes) => {
       if (pacientes.length !== 0) {
         res.send(pacientes);
@@ -55,13 +55,13 @@ pacienteRouter.get("/patients", async (req, res) => {
     });
 });
 
-pacienteRouter.get("/patients/:id", async (req, res) => {
-  Paciente.findById(req.params.id)
-    .then((paciente) => {
-      if (paciente) {
-        res.send(paciente);
+patientRouter.get("/patients/:id", async (req, res) => {
+  Patient.findById(req.params.id)
+    .then((patient) => {
+      if (patient) {
+        res.send(patient);
       } else {
-        res.status(404).send({ error: "Paciente no encontrado" });
+        res.status(404).send({ error: "Patient no encontrado" });
       }
     })
     .catch((error) => {
@@ -69,7 +69,7 @@ pacienteRouter.get("/patients/:id", async (req, res) => {
     });
 });
 
-pacienteRouter.patch("/patients", async (req, res) => {
+patientRouter.patch("/patients", async (req, res) => {
   if (!req.query.IdNumber && !req.query.name) {
     res.status(400).send({
       error: "Se necesita un numero de identificacion o nombre",
@@ -104,15 +104,15 @@ pacienteRouter.patch("/patients", async (req, res) => {
         ? { IdNumber: req.query.IdNumber.toString() }
         : { name: req.query.name!.toString() };
 
-      Paciente.findOneAndUpdate(filter, req.body, {
+      Patient.findOneAndUpdate(filter, req.body, {
         returnDocument: "after",
         runValidators: true,
       })
-        .then((paciente) => {
-          if (!paciente) {
+        .then((patient) => {
+          if (!patient) {
             res.status(404).send();
           } else {
-            res.send(paciente);
+            res.send(patient);
           }
         })
         .catch((error) => {
@@ -122,7 +122,7 @@ pacienteRouter.patch("/patients", async (req, res) => {
   }
 });
 
-pacienteRouter.patch("/patients/:id", async (req, res) => {
+patientRouter.patch("/patients/:id", async (req, res) => {
   if (!req.body || Object.keys(req.body).length === 0) {
     res.status(400).send({
       error: "Se necesitan tener los campos a modificar en la peticion",
@@ -149,15 +149,15 @@ pacienteRouter.patch("/patients/:id", async (req, res) => {
         error: "Actualizacion no fue permitida",
       });
     } else {
-      Paciente.findByIdAndUpdate(req.params.id, req.body, {
+      Patient.findByIdAndUpdate(req.params.id, req.body, {
         returnDocument: "after",
         runValidators: true,
       })
-        .then((paciente) => {
-          if (!paciente) {
+        .then((patient) => {
+          if (!patient) {
             res.status(404).send();
           } else {
-            res.send(paciente);
+            res.send(patient);
           }
         })
         .catch((error) => {
@@ -167,7 +167,7 @@ pacienteRouter.patch("/patients/:id", async (req, res) => {
   }
 });
 
-pacienteRouter.delete("/patients", async (req, res) => {
+patientRouter.delete("/patients", async (req, res) => {
   try {
     if (!req.query.IdNumber && !req.query.name) {
       res.status(400).send({
@@ -178,7 +178,7 @@ pacienteRouter.delete("/patients", async (req, res) => {
       ? { IdNumber: req.query.IdNumber.toString() }
       : { name: req.query.name!.toString() };
 
-    const patientIds = (await Paciente.find(filter)).map((p) => p._id);
+    const patientIds = (await Patient.find(filter)).map((p) => p._id);
     const record = await Record.find({ patient: { $in: patientIds } });
     for (const r of record) {
       const medicines = r.prescribedMedications;
@@ -191,7 +191,7 @@ pacienteRouter.delete("/patients", async (req, res) => {
       }
       const delete_record = await Record.findByIdAndDelete(r._id);
     }
-    const result = await Paciente.deleteMany(filter);
+    const result = await Patient.deleteMany(filter);
     if (result.deletedCount === 0) {
       return res.status(404).send();
     }
@@ -201,7 +201,7 @@ pacienteRouter.delete("/patients", async (req, res) => {
   }
 });
 
-pacienteRouter.delete("/patients/:id", async (req, res) => {
+patientRouter.delete("/patients/:id", async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).send({ error: "ID inválido" });
@@ -218,7 +218,7 @@ pacienteRouter.delete("/patients/:id", async (req, res) => {
       }
       const delete_record = await Record.findByIdAndDelete(r._id);
     }
-    const result = await Paciente.findByIdAndDelete(req.params.id);
+    const result = await Patient.findByIdAndDelete(req.params.id);
     if (!result) {
       return res.status(404).send();
     }
