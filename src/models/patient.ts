@@ -1,7 +1,7 @@
 import { Document, Schema, model } from "mongoose";
 import validator from "validator";
 
-export interface pacienteDocumentInterface extends Document {
+export interface patientDocumentInterface extends Document {
   name: string;
   dateOfBirth: Date;
   IdNumber: string; // Unico
@@ -17,7 +17,7 @@ export interface pacienteDocumentInterface extends Document {
   status: "activo" | "baja temporal" | "fallecido";
 }
 
-const pacienteSchema = new Schema<pacienteDocumentInterface>({
+const patientSchema = new Schema<patientDocumentInterface>({
   name: {
     type: String,
     required: true,
@@ -115,7 +115,7 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
   },
 });
 
-pacienteSchema.virtual("age").get(function (this: pacienteDocumentInterface) {
+patientSchema.virtual("age").get(function (this: patientDocumentInterface) {
   const today = new Date();
   const birth = new Date(this.dateOfBirth);
 
@@ -129,10 +129,10 @@ pacienteSchema.virtual("age").get(function (this: pacienteDocumentInterface) {
   return age;
 });
 
-pacienteSchema.set("toJSON", { virtuals: true });
-pacienteSchema.set("toObject", { virtuals: true });
+patientSchema.set("toJSON", { virtuals: true });
+patientSchema.set("toObject", { virtuals: true });
 
-export const Paciente = model<pacienteDocumentInterface>(
-  "Paciente",
-  pacienteSchema,
+export const Patient = model<patientDocumentInterface>(
+  "Patient",
+  patientSchema,
 );

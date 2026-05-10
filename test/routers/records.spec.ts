@@ -15,7 +15,7 @@ import { app } from "../../src/app";
 import { connectDB } from "../../src/db/mongoose";
 
 import { Record } from "../../src/models/records";
-import { Paciente } from "../../src/models/paciente";
+import { Patient } from "../../src/models/patient";
 import { Staff } from "../../src/models/staff";
 import { Medication } from "../../src/models/medications";
 
@@ -87,18 +87,18 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await Record.deleteMany({});
-  await Paciente.deleteMany({});
+  await Patient.deleteMany({});
   await Staff.deleteMany({});
   await Medication.deleteMany({});
 
-  await new Paciente(validPatient).save();
+  await new Patient(validPatient).save();
   await new Staff(validStaff).save();
   await new Medication(validMedication).save();
 });
 
 afterAll(async () => {
   await Record.deleteMany({});
-  await Paciente.deleteMany({});
+  await Patient.deleteMany({});
   await Staff.deleteMany({});
   await Medication.deleteMany({});
   await mongoose.connection.close();
@@ -418,7 +418,7 @@ test("Should execute rollback catch block", async () => {
 describe("GET /records", () => {
 
   test("Should get records by patient idDocument", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     await Record.create({
@@ -456,7 +456,7 @@ describe("GET /records", () => {
   });
 
   test("Should get records by date range", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     await Record.create({
@@ -483,7 +483,7 @@ describe("GET /records", () => {
   });
 
   test("Should filter records by recordType", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     await Record.create({
@@ -547,7 +547,7 @@ describe("GET /records", () => {
 
 describe("GET /records/patient", () => {
   test("Should get all records from a patient", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     await Record.create({
@@ -598,7 +598,7 @@ describe("GET /records/patient", () => {
   });
 
   test("Should return 500 if getPatientID throws", async () => {
-    vi.spyOn(Paciente, "findOne")
+    vi.spyOn(Patient, "findOne")
       .mockRejectedValueOnce(new Error("Random error"));
     await request(app)
       .get("/records/patient?idNumber=12345678Z")
@@ -612,7 +612,7 @@ describe("GET /records/patient", () => {
   });
 
   test("Should return records ordered by admissionDateTime", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     await Record.create({
@@ -659,7 +659,7 @@ describe("GET /records/patient", () => {
 
 describe("GET /records/:id", () => {
   test("Should get a record by ID", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -714,7 +714,7 @@ describe("GET /records/:id", () => {
 
 describe("PATCH /records/:id", () => {
   test("Should update reason correctly", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -762,7 +762,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should return validation error if body is empty", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -788,7 +788,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should return validation error for invalid idDocument", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -816,7 +816,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should return validation error for invalid medicalLicense", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -844,7 +844,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should update patient correctly", async () => {
-    const secondPatient = await Paciente.create({
+    const secondPatient = await Patient.create({
       name: "Ana Lopez",
       dateOfBirth: "1995-10-10",
       IdNumber: "87654321X",
@@ -859,7 +859,7 @@ describe("PATCH /records/:id", () => {
       bloodType: "A+",
       status: "activo",
     });
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -888,7 +888,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should update medications and amount correctly", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const medication = await Medication.findOne({
@@ -941,7 +941,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should rollback medications if processMedications fails", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const medication = await Medication.findOne({
@@ -981,7 +981,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should update dischargeDateTime automatically when closing record", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -1010,7 +1010,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should remove dischargeDateTime when reopening record", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -1040,7 +1040,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should return ValidationError from mongoose", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -1072,7 +1072,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should return 500 on unknown error", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const record = await Record.create({
@@ -1104,7 +1104,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should execute rollback2 catch block", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const medication = await Medication.findOne({
@@ -1154,7 +1154,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should set custom dischargeDateTime correctly", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const admissionDate = "2024-01-01T10:00:00.000Z";
@@ -1190,7 +1190,7 @@ describe("PATCH /records/:id", () => {
   });
 
   test("Should execute rollback1 catch block", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const medication = await Medication.findOne({
@@ -1240,7 +1240,7 @@ describe("PATCH /records/:id", () => {
 
 describe("DELETE /records/:id", () => {
   test("Should delete a record correctly", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const staff = await Staff.findOne({
@@ -1273,7 +1273,7 @@ describe("DELETE /records/:id", () => {
   });
 
   test("Should restore medication stock when deleting record", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const staff = await Staff.findOne({
@@ -1310,7 +1310,7 @@ describe("DELETE /records/:id", () => {
   });
 
   test("Should execute rollback catch block", async () => {
-    const patient = await Paciente.findOne({
+    const patient = await Patient.findOne({
       IdNumber: "12345678Z",
     });
     const staff = await Staff.findOne({
