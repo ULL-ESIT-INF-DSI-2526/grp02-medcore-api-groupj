@@ -1,5 +1,15 @@
 import { ValidationErrors } from "../error/validationErrors.js";
 
+/**
+ * Valida los datos principales requeridos
+ * para crear un registro clínico.
+ * 
+ * @param idDocument Documento identificativo del paciente.
+ * @param medicalLicense Número de licencia médica.
+ * @param medicationList Lista de medicamentos.
+ * 
+ * @throws ValidationErrors Si alguna validación falla.
+ */
 export function validateMainData(idDocument: unknown, 
                                   medicalLicense: unknown, 
                                   medicationList: unknown): void
@@ -11,6 +21,13 @@ export function validateMainData(idDocument: unknown,
   if (errors.length > 0) throw new ValidationErrors(errors);
 }
 
+/**
+ * Valida la estructura y contenido de una lista
+ * de medicamentos.
+ * 
+ * @param medicationList Lista de medicamentos.
+ * @param errors Array donde se almacenan errores encontrados.
+ */
 export function validateArray (medicationList: unknown, errors: string[]): void {
   if (!medicationList) errors.push("Se requiere la lista de medicamentos con la cantidad correspondiente");
   else if (!Array.isArray(medicationList)) errors.push("El formato de la lista de médicamentos no es válido");
@@ -31,6 +48,13 @@ export function validateArray (medicationList: unknown, errors: string[]): void 
   }
 }
 
+/**
+ * Valida un campo string requerido.
+ * 
+ * @param data Valor a validar.
+ * @param errors Array donde se almacenan errores encontrados.
+ * @param option Indica si el campo corresponde al paciente o al personal.
+ */
 export function validateString (data: unknown, errors: string[], option: boolean): void {
   const message: string = (option)? "identificación del paciente" : "licencia médica";
   if (!data) errors.push(`Se requiere la ${message}`);

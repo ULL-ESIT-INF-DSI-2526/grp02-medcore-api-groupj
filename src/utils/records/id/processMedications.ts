@@ -6,6 +6,26 @@ import { ForbiddenError } from "../error/forbiddenError.js";
 import { ConflictError } from "../error/conflictError.js";
 import { NotFoundError } from "../error/notFoundError.js";
 
+/**
+ * Procesa una lista de medicamentos prescritos.
+ * 
+ * La función:
+ * - Agrupa unidades repetidas por código nacional.
+ * - Verifica existencia, stock y caducidad.
+ * - Actualiza el stock disponible.
+ * - Genera información para rollback en caso de error.
+ * - Calcula el importe total del registro.
+ * 
+ * @param medicationList Lista de medicamentos recibidos desde la petición.
+ * @param rollback Lista utilizada para almacenar operaciones reversibles.
+ * 
+ * @throws {NotFoundError} Si un medicamento no existe.
+ * @throws {ConflictError} Si no hay stock suficiente.
+ * @throws {ForbiddenError} Si un medicamento está caducado.
+ * 
+ * @returns Objeto con los medicamentos prescritos y el importe total.
+ */
+
 export async function processMedications( medicationList: MedicationInput[],
                                           rollback: RollbackMedication[]
                                         ): Promise<{prescribedMedications: PrescribedMedication[],
@@ -39,6 +59,13 @@ export async function processMedications( medicationList: MedicationInput[],
   return { prescribedMedications, amount};
 }
 
+/**
+ * Agrupa las unidades totales requeridas por código nacional.
+ * 
+ * @param medicationList Lista de medicamentos prescritos.
+ * 
+ * @returns Mapa con el código nacional y el total de unidades necesarias.
+ */
 function calculateMedicationUnits( medicationList: MedicationInput[]): Map<string, number> {
   const medicationMap = new Map<string, number>();
   for (const medication of medicationList) {
@@ -49,6 +76,20 @@ function calculateMedicationUnits( medicationList: MedicationInput[]): Map<strin
   return medicationMap;
 }
 
+
+/**
+ * Verifica si un medicamento puede ser utilizado.
+ * 
+ * Comprueba:
+ * - Que exista stock suficiente.
+ * - Que el medicamento no esté caducado.
+ * 
+ * @param medication Medicamento almacenado en base de datos.
+ * @param requiredUnits Unidades necesarias para la operación.
+ * 
+ * @throws {ConflictError} Si el stock es insuficiente.
+ * @throws {ForbiddenError} Si el medicamento está caducado.
+ */
 function checkMedication( medication: any, requiredUnits: number): void {
   if (medication.stockDisponible < requiredUnits)
     throw new ConflictError(`No hay suficiente stock para el medicamento con código nacional ${medication.codigoNacional}`);

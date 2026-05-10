@@ -1,6 +1,23 @@
 import { ValidationErrors } from "../error/validationErrors.js";
 import { RECORD_TYPE } from "../../../types/consultas/recordType.js";
 
+/**
+ * Valida los parámetros utilizados en consultas GET
+ * de registros clínicos.
+ * 
+ * Comprueba:
+ * - Documento de identidad.
+ * - Rango de fechas.
+ * - Tipo de registro.
+ * - Compatibilidad entre filtros.
+ * 
+ * @param idDocument Documento identificativo del paciente.
+ * @param startDate Fecha inicial del rango.
+ * @param endDate Fecha final del rango.
+ * @param recordType Tipo de registro clínico.
+ * 
+ * @throws ValidationErrors Si alguna validación falla.
+ */
 export function validateGetData(idDocument: unknown,
                                 startDate: unknown,
                                 endDate: unknown,

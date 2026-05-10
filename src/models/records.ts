@@ -5,6 +5,9 @@ import { RecordType, RECORD_TYPE } from "../types/consultas/recordType.js";
 import { PrescribedMedication } from "../types/consultas/prescribedMedication.js";
 import { RecordStatus, RECORD_STATUS } from "../types/consultas/recordStatus.js";
 
+/**
+ * Representa un documento de historial clínico almacenado en MongoDB.
+ */
 export interface recordDocument extends Document {
   patient: Types.ObjectId;
   responsibleStaff: Types.ObjectId;
@@ -18,6 +21,9 @@ export interface recordDocument extends Document {
   recordStatus: RecordStatus;
 }
 
+/**
+ * Esquema de Mongoose para registros clínicos.
+ */
 const recordSchema = new Schema<recordDocument>({
   patient: {
     type: Schema.Types.ObjectId,
@@ -97,6 +103,9 @@ const recordSchema = new Schema<recordDocument>({
   }
 });
 
+/**
+ * Modelo de Mongoose para la colección de registros clínicos.
+ */
 export const Record = model<recordDocument>(
   "Record",
   recordSchema,

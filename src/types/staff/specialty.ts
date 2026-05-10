@@ -1,3 +1,6 @@
+/**
+ * Especialidades médicas válidas para el personal sanitario.
+ */
 export const MEDICAL_SPECIALTIES = [
   "medicina_general",
   "medicina_interna",
@@ -27,4 +30,7 @@ export const MEDICAL_SPECIALTIES = [
   "medicina_intensiva"
 ] as const;
 
+/**
+ * Tipo unión derivado de las especialidades médicas permitidas.
+ */
 export type MedicalSpecialty = typeof MEDICAL_SPECIALTIES[number];

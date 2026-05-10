@@ -6,6 +6,9 @@ import {
   FORMAFARMACEUTICA,
 } from "../types/medication/formaFarmaceutica.js";
 
+/**
+ * Representa un documento de medicamento almacenado en MongoDB.
+ */
 export interface medicationDocument extends Document {
   name: string;
   nombreActivo: string;
@@ -20,6 +23,9 @@ export interface medicationDocument extends Document {
   contradicciones: string[];
 }
 
+/**
+ * Esquema de Mongoose para medicamentos.
+ */
 const medicationSchema = new Schema<medicationDocument>({
   name: {
     type: String,
@@ -113,6 +119,9 @@ const medicationSchema = new Schema<medicationDocument>({
   },
 });
 
+/**
+ * Modelo de Mongoose para la colección de medicamentos.
+ */
 export const Medication = model<medicationDocument>(
   "Medication",
   medicationSchema,
