@@ -130,10 +130,8 @@ recordRouter.get("/records/patient", async (req, res) => {
     }
     return res.send(records);
   } catch (error: unknown) {
-    if (error instanceof ValidationErrors) {
-      return res
-        .status(error.statusCode)
-        .send({ error: error.message, details: error.errors });
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).send({ error: error.message });
     }
     return res.status(500).send({ error: "Error interno del servidor" });
   }
