@@ -113,31 +113,70 @@ recordRouter.post("/records", async (req, res) => {
 /**
  * @swagger
  * /records:
- *   post:
- *     summary: Crear un nuevo registro clínico
+ *   get:
+ *     summary: Obtener registros clínicos
+ *     description: |
+ *       Permite consultar registros clínicos mediante:
+ *
+ *       - Documento identificativo del paciente (`idDocument`)
+ *       - Rango de fechas (`startDate` y `endDate`)
+ *       - Tipo de registro (`recordType`)
+ *
+ *       Los resultados se devuelven ordenados cronológicamente.
  *     tags:
  *       - Records
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/RecordInput'
+ *
+ *     parameters:
+ *       - in: query
+ *         name: idDocument
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Documento identificativo del paciente
+ *         example: "12345678Z"
+ *
+ *       - in: query
+ *         name: startDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Fecha inicial del rango de búsqueda
+ *
+ *       - in: query
+ *         name: endDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Fecha final del rango de búsqueda
+ *
+ *       - in: query
+ *         name: recordType
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum:
+ *             - consulta_ambulatoria
+ *             - ingreso_hospitalario
+ *         description: Tipo de registro clínico
+ *
  *     responses:
- *       201:
- *         description: Registro clínico creado correctamente
+ *       200:
+ *         description: Lista de registros clínicos
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Record'
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Record'
+ *
  *       400:
- *         description: Error de validación
- *       403:
- *         description: Médico inactivo o medicamento caducado
+ *         description: Parámetros inválidos
+ *
  *       404:
- *         description: Paciente, médico o medicamento no encontrado
- *       409:
- *         description: Stock insuficiente
+ *         description: No se encontraron registros
+ *
  *       500:
  *         description: Error interno del servidor
  */
