@@ -5,6 +5,9 @@ import { ProfessionalCategory, PROFESSIONAL_CATEGORIES } from "../types/staff/pr
 import { StaffStatus, STAFF_STATUS } from "../types/staff/status.js";
 import { Shift, SHIFTS } from "../types/staff/shift.js";
 
+/**
+ * Modelo de Mongoose para la colección de registros clínicos.
+ */
 export interface StaffDocument extends Document {
   name: string;
   medicalLicenseNum: string;
@@ -20,6 +23,9 @@ export interface StaffDocument extends Document {
   status: StaffStatus;
 }
 
+/**
+ * Esquema de Mongoose para personal sanitario.
+ */
 const staffSchema = new Schema<StaffDocument>({
   name: {
     type: String,
@@ -114,6 +120,9 @@ const staffSchema = new Schema<StaffDocument>({
   },
 });
 
+/**
+ * Modelo de Mongoose para la colección de personal sanitario.
+ */
 export const Staff = model<StaffDocument>(
   "Staff",
   staffSchema,

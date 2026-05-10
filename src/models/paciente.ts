@@ -1,6 +1,9 @@
 import { Document, Schema, model } from "mongoose";
 import validator from "validator";
 
+/**
+ * Representa un documento de paciente almacenado en MongoDB.
+ */
 export interface pacienteDocumentInterface extends Document {
   name: string;
   dateOfBirth: Date;
@@ -17,6 +20,9 @@ export interface pacienteDocumentInterface extends Document {
   status: "activo" | "baja temporal" | "fallecido";
 }
 
+/**
+ * Esquema de Mongoose para pacientes.
+ */
 const pacienteSchema = new Schema<pacienteDocumentInterface>({
   name: {
     type: String,
@@ -115,6 +121,10 @@ const pacienteSchema = new Schema<pacienteDocumentInterface>({
   },
 });
 
+/**
+ * Calcula automáticamente la edad del paciente
+ * a partir de su fecha de nacimiento.
+ */
 pacienteSchema.virtual("age").get(function (this: pacienteDocumentInterface) {
   const today = new Date();
   const birth = new Date(this.dateOfBirth);
@@ -129,9 +139,15 @@ pacienteSchema.virtual("age").get(function (this: pacienteDocumentInterface) {
   return age;
 });
 
+/**
+ * Incluye propiedades virtuales al convertir documentos a JSON.
+ */
 pacienteSchema.set("toJSON", { virtuals: true });
 pacienteSchema.set("toObject", { virtuals: true });
 
+/**
+ * Modelo de Mongoose para la colección de pacientes.
+ */
 export const Paciente = model<pacienteDocumentInterface>(
   "Paciente",
   pacienteSchema,

@@ -1,6 +1,17 @@
 import { recordDocument } from "../../../models/records.js";
 import { ValidationErrors } from "../error/validationErrors.js";
 
+/**
+ * Valida fechas y estado durante la modificación
+ * de un registro clínico.
+ * 
+ * @param record Registro actual almacenado.
+ * @param admissionDateTime Nueva fecha de admisión.
+ * @param dischargeDateTime Nueva fecha de alta.
+ * @param recordStatus Nuevo estado del registro.
+ * 
+ * @throws ValidationErrors Si alguna validación falla.
+ */
 export function validatePatchDates( record: recordDocument,
                                     admissionDateTime: unknown,
                                     dischargeDateTime: unknown,

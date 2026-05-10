@@ -1,5 +1,21 @@
 import { ValidationErrors } from "../error/validationErrors.js";
 
+/**
+ * Valida las fechas y el estado de un registro clínico
+ * durante la creación de un nuevo registro.
+ * 
+ * Comprueba:
+ * - Formato válido de fechas.
+ * - Coherencia entre fechas de admisión y alta.
+ * - Compatibilidad entre estado y fecha de alta.
+ * - Que la fecha de alta no esté en el futuro.
+ * 
+ * @param admissionDateTime Fecha de admisión.
+ * @param dischargeDateTime Fecha de alta.
+ * @param recordStatus Estado del registro clínico.
+ * 
+ * @throws ValidationErrors Si alguna validación falla.
+ */
 export function validateDates( admissionDateTime: unknown, dischargeDateTime: unknown, recordStatus: unknown ): void {
   const errors: string[] = [];
   let admission: Date | undefined;
