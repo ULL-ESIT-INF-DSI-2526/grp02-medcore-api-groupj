@@ -71,11 +71,9 @@ recordRouter.post("/records", async (req, res) => {
     } else if (error instanceof AppError) {
       return res.status(error.statusCode).send({ error: error.message });
     } else if (error instanceof Error) {
-      if (error.message.includes("duplicate key")) {
-        return res.status(409).send({ error: error.message });
-      } else if (error.name === "ValidationError") {
-        return res.status(400).send({ error: error.message });
-      }
+        if (error.name === "ValidationError") {
+          return res.status(400).send({ error: error.message });
+        }
     }
     return res.status(500).send({ error: "Error interno del servidor" });
   }
