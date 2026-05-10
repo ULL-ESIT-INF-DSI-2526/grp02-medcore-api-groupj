@@ -1,9 +1,10 @@
 import { describe, test, beforeEach, beforeAll, expect, afterAll, vi } from "vitest";
 import mongoose from "mongoose";
 import request from "supertest";
-import { app } from "../src/app";
-import { connectDB } from "../src/db/mongoose";
-import { Staff } from "../src/models/staff";
+import { app } from "../../src/app";
+import { connectDB } from "../../src/db/mongoose";
+import { Staff } from "../../src/models/staff";
+import { Record } from "../../src/models/records";
 
 const validStaff = {
   name: "Juan Perez",
@@ -413,5 +414,188 @@ describe("PATCH /staff/:id", () => {
       .send({ shift: "tarde" })
       .expect(500);
   });
+});
 
+describe("DELETE /staff", () => {
+  test("Should delete a staff member by medicalLicenseNum", async () => {
+    await new Staff(validStaff).save();
+
+    await request(app)
+      .delete(
+        `/staff?medicalLicenseNum=${validStaff.medicalLicenseNum}`,
+      )
+      .expect(200);
+  });
+
+  test("Should return 400 if medicalLicenseNum is missing", async () => {
+    await request(app)
+      .delete("/staff")
+      .expect(400);
+  });
+
+  test("Should return 400 if medicalLicenseNum is empty", async () => {
+    await request(app)
+      .delete("/staff?medicalLicenseNum=")
+      .expect(400);
+  });
+
+  test("Should return 400 if medicalLicenseNum is not a string", async () => {
+    await request(app)
+      .delete(
+        "/staff?medicalLicenseNum=123456789&medicalLicenseNum=987654321",
+      )
+      .expect(400);
+  });
+
+  test("Should return 404 if staff member does not exist", async () => {
+    await request(app)
+      .delete("/staff?medicalLicenseNum=000000000")
+      .expect(404);
+  });
+
+  test("Should return 409 if staff member has assigned records", async () => {
+    const staff = await new Staff(validStaff).save();
+    await Record.create({
+      patient: new mongoose.Types.ObjectId(),
+      responsibleStaff: staff._id,
+      recordType: "consulta_ambulatoria",
+      reason: "Dolor",
+      diagnosis: "Gripe",
+      prescribedMedications: [
+        {
+          medication: new mongoose.Types.ObjectId(),
+          units: 1,
+          posology: "1 al dia",
+        },
+      ],
+      amount: 20,
+      recordStatus: "cerrado",
+    });
+    await request(app)
+      .delete(
+        `/staff?medicalLicenseNum=${staff.medicalLicenseNum}`,
+      )
+      .expect(409);
+  });
+
+  test("Should return 400 on ValidationError in DELETE /staff", async () => {
+    vi.spyOn(Staff, "findOne").mockImplementationOnce(() => {
+      const error = new Error("Validation failed");
+      error.name = "ValidationError";
+      throw error;
+    });
+    await request(app)
+      .delete(`/staff?medicalLicenseNum=${validStaff.medicalLicenseNum}`)
+      .expect(400);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    vi.spyOn(Staff, "findOne").mockImplementationOnce(() => {
+      throw new Error("Random error");
+    });
+    await request(app)
+      .delete(
+        `/staff?medicalLicenseNum=${validStaff.medicalLicenseNum}`,
+      )
+      .expect(500);
+  });
+
+  test("Should return 500 if non-error is thrown", async () => {
+    vi.spyOn(Staff, "findOne").mockImplementationOnce(() => {
+      throw "random string";
+    });
+    await request(app)
+      .delete(
+        `/staff?medicalLicenseNum=${validStaff.medicalLicenseNum}`,
+      )
+      .expect(500);
+  });
+});
+
+describe("DELETE /staff/:id", () => {
+
+  test("Should delete a staff member by ID", async () => {
+    const staff = await new Staff(validStaff).save();
+    await request(app)
+      .delete(`/staff/${staff._id}`)
+      .expect(200);
+  });
+
+  test("Should return 400 if ID is invalid", async () => {
+    await request(app)
+      .delete("/staff/invalidID")
+      .expect(400);
+  });
+
+  test("Should return 404 if staff member does not exist", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    await request(app)
+      .delete(`/staff/${fakeId}`)
+      .expect(404);
+  });
+
+  test("Should return 409 if staff member has assigned records", async () => {
+    const staff = await new Staff(validStaff).save();
+    await Record.create({
+      patient: new mongoose.Types.ObjectId(),
+      responsibleStaff: staff._id,
+      recordType: "consulta_ambulatoria",
+      reason: "Dolor",
+      diagnosis: "Gripe",
+      prescribedMedications: [
+        {
+          medication: new mongoose.Types.ObjectId(),
+          units: 1,
+          posology: "1 al dia",
+        },
+      ],
+      amount: 20,
+      recordStatus: "cerrado",
+    });
+    await request(app)
+      .delete(`/staff/${staff._id}`)
+      .expect(409);
+  });
+
+  test("Should return deleted staff member by ID", async () => {
+    const staff = await new Staff(validStaff).save();
+    const response = await request(app)
+      .delete(`/staff/${staff._id}`)
+      .expect(200);
+    expect(response.body.medicalLicenseNum).toBe(
+      validStaff.medicalLicenseNum,
+    );
+  });
+
+  test("Should return 400 on ValidationError", async () => {
+    const staff = await new Staff(validStaff).save();
+    vi.spyOn(Staff, "findById").mockImplementationOnce(() => {
+      const error = new Error("Validation failed");
+      error.name = "ValidationError";
+      throw error;
+    });
+    await request(app)
+      .delete(`/staff/${staff._id}`)
+      .expect(400);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    const staff = await new Staff(validStaff).save();
+    vi.spyOn(Staff, "findById").mockImplementationOnce(() => {
+      throw new Error("Random error");
+    });
+    await request(app)
+      .delete(`/staff/${staff._id}`)
+      .expect(500);
+  });
+
+  test("Should return 500 if non-error is thrown", async () => {
+    const staff = await new Staff(validStaff).save();
+    vi.spyOn(Staff, "findById").mockImplementationOnce(() => {
+      throw "random string";
+    });
+    await request(app)
+      .delete(`/staff/${staff._id}`)
+      .expect(500);
+  });
 });

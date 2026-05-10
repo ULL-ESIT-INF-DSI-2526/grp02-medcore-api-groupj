@@ -9,9 +9,10 @@ import {
 } from "vitest";
 import mongoose from "mongoose";
 import request from "supertest";
-import { app } from "../src/app";
-import { connectDB } from "../src/db/mongoose";
-import { Medication } from "../src/models/medications";
+import { app } from "../../src/app";
+import { connectDB } from "../../src/db/mongoose";
+import { Medication } from "../../src/models/medications";
+import { Record } from "../../src/models/records";
 
 const validMedication = {
   name: "clemamina",
@@ -172,16 +173,7 @@ describe("GET /medications", () => {
   test("Should filter by national code", async () => {
     await new Medication(validMedication).save();
     const res = await request(app)
-      .get("/medications?nombreActivo=arecolina")
-      .expect(200);
-    expect(res.body.length).toBe(1);
-    expect(res.body[0].name).toBe("clemamina");
-  });
-
-  test("Should filter by national code", async () => {
-    await new Medication(validMedication).save();
-    const res = await request(app)
-      .get("/medications?codigoNaciona=123456")
+      .get("/medications?codigoNacional=123456")
       .expect(200);
     expect(res.body.length).toBe(1);
     expect(res.body[0].name).toBe("clemamina");
@@ -264,6 +256,24 @@ describe("PATCH /medications", () => {
       .expect(200);
     expect(response.body.stockDisponible).toBe(3);
   });
+
+  test("Should update a medication by name", async () => {
+    await new Medication(validMedication).save();
+    const res = await request(app)
+      .patch("/medications?name=clemamina")
+      .send({ stockDisponible: 8 })
+      .expect(200);
+    expect(res.body.stockDisponible).toBe(8);
+  });
+
+test("Should update a medication by active component", async () => {
+  await new Medication(validMedication).save();
+  const res = await request(app)
+    .patch("/medications?nombreActivo=arecolina")
+    .send({ stockDisponible: 5 })
+    .expect(200);
+  expect(res.body.stockDisponible).toBe(5);
+});
 
   test("Should return 400 if national code is missing", async () => {
     await request(app)
@@ -413,6 +423,129 @@ describe("PATCH /medications/:id", () => {
     await request(app)
       .patch(`/medications/${medication._id}`)
       .send({ stockDisponible: 3 })
+      .expect(500);
+  });
+});
+
+describe("DELETE /medications", () => {
+  test("Should delete medication by name", async () => {
+    await new Medication(validMedication).save();
+    const response = await request(app)
+      .delete("/medications?name=clemamina")
+      .expect(200);
+    expect(response.body.name).toBe("clemamina");
+  });
+
+  test("Should delete medication by nombreActivo", async () => {
+    await new Medication(validMedication).save();
+    const response = await request(app)
+      .delete("/medications?nombreActivo=arecolina").expect(200);
+    expect(response.body.nombreActivo).toBe("arecolina");
+  });
+
+  test("Should delete medication by codigoNacional", async () => {
+    await new Medication(validMedication).save();
+    const response = await request(app)
+      .delete("/medications?codigoNacional=123456").expect(200);
+    expect(response.body.codigoNacional).toBe("123456");
+  });
+
+  test("Should return 400 if no filters are provided", async () => {
+    await request(app)
+      .delete("/medications")
+      .expect(400);
+  });
+
+  test("Should return 404 if medication does not exist", async () => {
+    await request(app)
+      .delete("/medications?codigoNacional=999999").expect(404);
+  });
+
+  test("Should return 409 if medication is used in records", async () => {
+    const medication = await new Medication(validMedication).save();
+    await Record.create({
+      patient: new mongoose.Types.ObjectId(),
+      responsibleStaff: new mongoose.Types.ObjectId(),
+      recordType: "consulta_ambulatoria",
+      reason: "Dolor",
+      diagnosis: "Gripe",
+      prescribedMedications: [
+        {
+          medication: medication._id,
+          units: 2,
+          posology: "Cada 8 horas",
+        },
+      ],
+      amount: 20,
+      recordStatus: "abierto",
+    });
+    await request(app)
+      .delete(`/medications?codigoNacional=${medication.codigoNacional}`)
+      .expect(409);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    vi.spyOn(Medication, "findOne").mockImplementationOnce(() => {
+      throw new Error("DB error");
+    });
+    await request(app)
+      .delete("/medications?codigoNacional=123456")
+      .expect(500);
+  });
+});
+
+describe("DELETE /medications/:id", () => {
+  test("Should delete medication by id", async () => {
+    const medication = await new Medication(validMedication).save();
+    const response = await request(app)
+      .delete(`/medications/${medication._id}`)
+      .expect(200);
+    expect(response.body._id).toBe(medication.id);
+  });
+
+  test("Should return 400 if id is invalid", async () => {
+    await request(app)
+      .delete("/medications/123")
+      .expect(400);
+  });
+
+  test("Should return 404 if medication does not exist", async () => {
+    const fakeId = new mongoose.Types.ObjectId();
+    await request(app)
+      .delete(`/medications/${fakeId}`)
+      .expect(404);
+  });
+
+  test("Should return 409 if medication is used in records", async () => {
+    const medication = await new Medication(validMedication).save();
+    await Record.create({
+      patient: new mongoose.Types.ObjectId(),
+      responsibleStaff: new mongoose.Types.ObjectId(),
+      recordType: "consulta_ambulatoria",
+      reason: "Dolor",
+      diagnosis: "Gripe",
+      prescribedMedications: [
+        {
+          medication: medication._id,
+          units: 2,
+          posology: "Cada 8 horas",
+        },
+      ],
+      amount: 20,
+      recordStatus: "abierto",
+    });
+    await request(app)
+      .delete(`/medications/${medication._id}`)
+      .expect(409);
+  });
+
+  test("Should return 500 on internal error", async () => {
+    vi.spyOn(Medication, "findById").mockImplementationOnce(() => {
+      throw new Error("DB error");
+    });
+    const id = new mongoose.Types.ObjectId();
+    await request(app)
+      .delete(`/medications/${id}`)
       .expect(500);
   });
 });
